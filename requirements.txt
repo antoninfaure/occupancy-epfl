@@ -1,0 +1,5 @@
+Flask==2.2.2
+Flask_PyMongo==2.3.0
+Flask_WTF==1.1.1
+numpy==1.24.1
+python-dotenv==0.21.1
