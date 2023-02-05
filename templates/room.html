@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Occupancy FLEP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Antonin Faure">
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com"> 
+    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
+
+</head>
+<body>
+    <div class="row m-0 p-0" style="min-height: 100%;">
+
+        <!-- header -->
+
+        <header class="col-12 p-5 m-0 text-center">
+            <h1 class="text-center"><a href="/">Occupancy EPFL</a></h1>
+            <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
+                <form action="/room" method="get">
+                    <div class="input-group justify-content-center">
+                        <input type="text" autofocus class="form-control" name="name" placeholder="nom salle...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-danger">Chercher</button>
+                        </div>
+                    </div>
+                </form>
+            </div> 
+            <div class="col-12">
+                <a href="/" class="btn btn-dark mt-3 float-start">Accueil</a>
+            </div>
+        </header>
+
+
+        <!-- content -->
+
+        <div class="main col-12 px-5 m-0">
+            <h2 class="text-center">{{room.name}}</h2>
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-tab-panel" type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Plan</button>
+                </li>
+              </ul>
+            <div class="tab-content" id="tabContent">
+                <div class="tab-pane fade show active p-0" id="schedule-tab-panel" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+                    <div class="row">
+                        <div class="float-end">
+                            <span class="taken cours p-2">Cours</span>
+                            <span class="taken exercice p-2">Exercice, TP</span>
+                            <span class="taken projet p-2">Projet, autre</span>
+                        </div>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-bordered table-striped text-center">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        Lundi
+                                    </td>
+                                    <td>
+                                        Mardi
+                                    </td>
+                                    <td>
+                                        Mercredi
+                                    </td>
+                                    <td>
+                                        Jeudi
+                                    </td>
+                                    <td>
+                                        Vendredi
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for time, row in timetable.items() %}
+                                <tr>
+                                    <td>{{time}}</td>
+                                    {% for day, col in row.items() %}
+                                        {% if col|length > 0 %}
+                                            {% if 'skip' not in col.keys() %}
+                                            <td class="{{col['label']}} taken text-center align-middle" rowspan="{{col['duration']}}">{{col['course']['name']}}<br>({{col['course']['code']}})</td>
+                                            {% endif %}
+                                        {% else %}
+                                        <td></td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-0 m-0" id="map-tab-panel" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
+                    <iframe src="https://plan.epfl.ch/?room={{room.name}}" height="700px" width="100%"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- footer -->
+
+        <footer class="col-12 m-0 p-4 text-center mt-auto">
+            <p>{{ now.year }} Copyright - Antonin Faure </p>
+        </footer>
+    </div>
+</body>
+
+<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+</html>

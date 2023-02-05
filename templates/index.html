@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Occupancy FLEP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="author" content="Antonin Faure">
+
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com"> 
+    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.css">
+  
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
+
+</head>
+<body>
+    <div class="row m-0 p-0" style="min-height: 100%;">
+        <!-- header -->
+        <header class="col-12 p-5 m-0">
+            <div class="row mb-3">
+                <h1 class="text-center"><a href="/">Occupancy EPFL</a></h1>
+                <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
+                    <form action="/room" method="get">
+                        <div class="input-group justify-content-center">
+                            <input type="text" autofocus class="form-control" name="name" placeholder="nom salle...">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-danger">Chercher</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>        
+            </div>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="find-tab" data-bs-toggle="tab" data-bs-target="#find-tab-panel" type="button" role="tab" aria-controls="find-tab-panel" aria-selected="true">Salles libres</button>
+                  </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-tab-panel" type="button" role="tab" aria-controls="rooms-tab-panel" aria-selected="false">Salles</button>
+                </li>
+              </ul>   
+        </header>
+    
+        <div class="main col-12 m-0 p-0 mb-5">
+            <!-- content -->
+            <div class="tab-content" id="tabContent">
+                <div class="tab-pane fade p-0 px-5" id="rooms-tab-panel" role="tabpanel" aria-labelledby="rooms-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table id="rooms_table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td><a href="/room/?name={{room.name}}">{{ room.name }}</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade show active p-0 px-5 m-0" id="find-tab-panel" role="tabpanel" aria-labelledby="find-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center" id="select-table">
+                            <thead>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        Lundi
+                                    </td>
+                                    <td>
+                                        Mardi
+                                    </td>
+                                    <td>
+                                        Mercredi
+                                    </td>
+                                    <td>
+                                        Jeudi
+                                    </td>
+                                    <td>
+                                        Vendredi
+                                    </td>
+                                </tr>
+                            </thead>
+                            <tbody id="area">
+                                {% for time, row in timetable.items() %}
+                                <tr>
+                                    <td>{{time}}</td>
+                                    {% for day, col in row.items() %}
+                                        <td class="selectable" data-day="{{day}}" data-time="{{time}}"></td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-12 p-0 m-0 mb-4 text-center">
+                        <button class="btn btn-lg btn-danger" onclick="findFreeRooms()">Chercher</button>
+                    </div>
+                    <hr>
+                    <h4><strong>Salles disponibles</strong></h4>
+                    <div class="table-responsive">
+                        <table id="available_rooms_table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- footer -->
+        <footer class="col-12 m-0 p-4 text-center mt-auto">
+            <p>© Copyright {{ now.year }} - Antonin Faure</p>
+        </footer>
+    </div>
+</body>
+
+<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+
+<script src="https://unpkg.com/dragselect@latest/dist/ds.min.js"></script>
+<script>
+    $(document).ready( function () {
+        $('#rooms_table').DataTable();
+    } );
+
+    const ds = new DragSelect({
+        selectables: document.querySelectorAll('.selectable'),
+        area: document.getElementById('area'),
+        draggability: false,
+        multiSelectMode: true
+    });
+
+    ds.subscribe('callback', (e) => {
+        console.log(e)
+    });
+
+
+    var csrf_token = "{{ csrf_token() }}";
+
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrf_token);
+            }
+        }
+    });
+
+    function findFreeRooms() {
+        selection = ds.getSelection()
+        selection = selection.map(x => x = {
+            'day': $(x).data('day'),
+            'time': $(x).data('time')
+        })
+        $.ajax({
+            url: '/find_free_rooms',
+            type: "POST",
+            data: JSON.stringify(selection),
+            contentType:"application/json; charset=utf-8",
+            dataType:"json",
+            success: function(results){
+                $('#available_rooms_table').DataTable({
+                    data: results.map(x => x = {"name": x}),
+                    columns: [
+                        { 
+                            data: 'name',
+                            render: function ( data, type, row) {
+                                if(type === 'display'){
+                                    return $('<a>')
+                                        .attr('href', '/room/?name=' + data)
+                                        .text(data)
+                                        .wrap('<div></div>')
+                                        .parent()
+                                        .html();
+                                } else return data
+                            }
+                        },
+                    ],
+                    destroy: true
+                });
+            }
+        })
+    }
+</script>
+</html>
