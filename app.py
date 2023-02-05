@@ -38,7 +38,7 @@ def room():
     if (name == None):
         return redirect(url_for('home')) 
 
-    name = re.sub(r"[^a-zA-Z0-9 ]", "", name)
+    name = re.sub(r"([A-Za-z0-9\-\.])", "", name)
 
     room = db.rooms.find_one({'name': name})
     if (room == None):
