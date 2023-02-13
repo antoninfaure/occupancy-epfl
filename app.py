@@ -104,7 +104,7 @@ def find_free_rooms():
 
     rooms = db.rooms.find({ '_id': { '$in': available_rooms}})
 
-    rooms_name = [x['name'] for x in list(rooms)]
+    rooms_name = [{'name': x['name'], 'type': x['type']} for x in list(rooms)]
 
     return rooms_name
 

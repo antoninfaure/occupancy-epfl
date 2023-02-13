@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Occupancy FLEP</title>
+    <title>Occupancy EPFL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="author" content="Antonin Faure">
 
@@ -48,6 +48,7 @@
 
         <div class="main col-12 px-5 m-0">
             <h2 class="text-center">{{room.name}}</h2>
+            <h6 class="text-center font-italic">{{room.type}}</h6>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                   <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
@@ -120,5 +121,5 @@
     </div>
 </body>
 
-<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='styles/style.css') }}">
+<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='style.css') }}">
 </html>

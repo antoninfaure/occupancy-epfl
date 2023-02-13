@@ -14,6 +14,10 @@ a {
     text-decoration: underline;
     color: #550000;
 }
+h1 {
+    font-family: 'GilroyBold';
+    font-size: 3rem;
+}
 h1 a {
     color: inherit;
     text-decoration: inherit;
@@ -47,4 +51,25 @@ h2 {
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
-    }
+}
+.font-italic {
+    font-style: italic;
+}
+
+@font-face {
+    font-family: "GilroyBold";
+    src: url("./fonts/GilroyExtraBold.eot") format("embedded-opentype");
+    src: url("./fonts/GilroyExtraBold.woff") format("woff"),
+        url("./fonts/GilroyExtraBold.otf") format("opentype");
+    font-style: normal;
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: "GilroyLight";
+    src: url("./fonts/GilroyLight.eot") format("embedded-opentype");
+    src: url("./fonts/GilroyLight.woff") format("woff"),
+        url("./fonts/GilroyLight.otf") format("opentype");
+    font-style: normal;
+    font-weight: normal;
+}
