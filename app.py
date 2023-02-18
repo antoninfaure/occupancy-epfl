@@ -210,9 +210,13 @@ def find_semester():
             for k in range(i):
                 k_time = f'{times[k]}-{times[k]+1}'
                 if (len(timetable[k_time][day]) > 0):
-                    for slot in timetable[k_time][day]:
+                    for i_slot, slot in enumerate(timetable[k_time][day]):
                         if ('duration' in slot and slot['duration'] > i - k):
-                            timetable[f'{time}-{time+1}'][day].append({'skip': True})
+                            if (len(timetable[f'{time}-{time+1}'][day]) < i_slot):
+                                timetable[f'{time}-{time+1}'][day].append({'skip': True, 'colspan': slot['colspan'] })
+                            else:  
+                                x = timetable[f'{time}-{time+1}'][day]
+                                timetable[f'{time}-{time+1}'][day] = x[:i_slot] + [{'skip': True, 'colspan': slot['colspan'] }] + x[i_slot:]
 
     # Find max colspan per day
     for time in times:
@@ -220,18 +224,6 @@ def find_semester():
             cols = len(timetable[f'{time}-{time+1}'][day])
             if (cols > colspan[day]):
                 colspan[day] = cols
-
-    # Fill colspan
-    for time in times:
-        for day in days:
-            cols = len(timetable[f'{time}-{time+1}'][day])
-            if (cols > 0 and cols < colspan[day]):
-                max_cols = cols
-                if ('skip' not in timetable[f'{time}-{time+1}'][day][0]):
-                    for k in range(timetable[f'{time}-{time+1}'][day][0]['duration']):
-                        if (len(timetable[f'{k+time}-{k+time+1}'][day]) > max_cols):
-                            max_cols = len(timetable[f'{k+time}-{k+time+1}'][day])
-                timetable[f'{time}-{time+1}'][day][0]['colspan'] = colspan[day] - max_cols + 1
 
     sections_name = {
         'GM':'Génie mécanique',

@@ -99,17 +99,13 @@
                                             {% set total_colspan = namespace(value=0) %}
                                             {% for slot in col %}
                                                 {% if slot|length > 0 %}
-                                                    {% if 'colspan' not in slot.keys() %}
-                                                        {% set total_colspan.value = total_colspan.value + 1 %}
-                                                    {% else %}
-                                                        {% set total_colspan.value = total_colspan.value + slot['colspan'] %}
-                                                    {% endif %}
+                                                    {% set total_colspan.value = total_colspan.value + slot['colspan'] %}
                                                     {% if 'skip' not in slot.keys() %}
-                                                    <td class="{{slot['label']}} taken text-center align-middle" colspan="{{slot['colspan']}}" rowspan="{{slot['duration']}}"><a href="/course?code={{slot['course']['code']}}">{{slot['course']['name']}}<br>({{slot['course']['code']}})</a><br>
-                                                    {% for room in slot['rooms'] %}
-                                                        <a class="btn btn-sm btn-light my-2" href="/room?name={{room}}">{{room}}</a>
-                                                    {% endfor %}
-                                                    </td>
+                                                        <td class="{{slot['label']}} taken text-center align-middle" colspan="{{slot['colspan']}}" rowspan="{{slot['duration']}}"><a href="/course?code={{slot['course']['code']}}">{{slot['course']['name']}}<br>({{slot['course']['code']}})</a><br>
+                                                        {% for room in slot['rooms'] %}
+                                                            <a class="btn btn-sm btn-light my-2" href="/room?name={{room}}">{{room}}</a>
+                                                        {% endfor %}
+                                                        </td>
                                                     {% endif %}
                                                 {% endif %}
                                             {% endfor %}
