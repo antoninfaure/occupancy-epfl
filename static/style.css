@@ -55,6 +55,9 @@ h2 {
 .font-italic {
     font-style: italic;
 }
+table a {
+    color: white;
+}
 
 @font-face {
     font-family: "GilroyBold";

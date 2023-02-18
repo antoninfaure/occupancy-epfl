@@ -47,8 +47,6 @@
         <!-- content -->
 
         <div class="main col-12 px-5 m-0">
-            <h2 class="text-center">{{room.name}}</h2>
-            <h6 class="text-center font-italic">{{room.type}}</h6>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                   <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
@@ -71,19 +69,19 @@
                             <thead>
                                 <tr>
                                     <td></td>
-                                    <td>
+                                    <td colspan="{{colspan['Lu']}}">
                                         Lundi
                                     </td>
-                                    <td>
+                                    <td colspan="{{colspan['Ma']}}">
                                         Mardi
                                     </td>
-                                    <td>
+                                    <td colspan="{{colspan['Me']}}">
                                         Mercredi
                                     </td>
-                                    <td>
+                                    <td colspan="{{colspan['Je']}}">
                                         Jeudi
                                     </td>
-                                    <td>
+                                    <td colspan="{{colspan['Ve']}}">
                                         Vendredi
                                     </td>
                                 </tr>
@@ -92,13 +90,36 @@
                                 {% for time, row in timetable.items() %}
                                 <tr>
                                     <td>{{time}}</td>
+                                    
                                     {% for day, col in row.items() %}
+                                        
                                         {% if col|length > 0 %}
-                                            {% if 'skip' not in col.keys() %}
-                                            <td class="{{col['label']}} taken text-center align-middle" rowspan="{{col['duration']}}"><a href="/course?code={{col['course']['code']}}">{{col['course']['name']}}<br>({{col['course']['code']}})</a></td>
+                                            {% set total_colspan = namespace(value=0) %}
+                                            {% for slot in col %}
+                                                {% if slot|length > 0 %}
+                                                    {% if 'colspan' not in slot.keys() %}
+                                                        {% set total_colspan.value = total_colspan.value + 1 %}
+                                                    {% else %}
+                                                        {% set total_colspan.value = total_colspan.value + slot['colspan'] %}
+                                                    {% endif %}
+                                                    {% if 'skip' not in slot.keys() %}
+                                                    <td class="{{slot['label']}} taken text-center align-middle" colspan="{{slot['colspan']}}" rowspan="{{slot['duration']}}"><a href="/course?code={{slot['course']['code']}}">{{slot['course']['name']}}<br>({{slot['course']['code']}})</a><br>
+                                                    {% for room in slot['rooms'] %}
+                                                        <a class="btn btn-sm btn-light" href="/room?name={{room}}">{{room}}</a>
+                                                    {% endfor %}
+                                                    </td>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if colspan[day] > total_colspan.value %}
+                                                {% for i in range(colspan[day] - total_colspan.value) %}
+                                                <td></td>
+                                                {% endfor %}
                                             {% endif %}
                                         {% else %}
-                                        <td></td>
+                                            {% for i in range(colspan[day]) %}
+                                            <td></td>
+                                            {% endfor %}
                                         {% endif %}
                                     {% endfor %}
                                 </tr>
@@ -106,9 +127,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div class="tab-pane fade p-0 m-0" id="map-tab-panel" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                    <iframe src="https://plan.epfl.ch/?room={{room.name}}" height="700px" width="100%"></iframe>
                 </div>
             </div>
         </div>

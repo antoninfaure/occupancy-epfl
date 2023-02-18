@@ -47,8 +47,8 @@
         <!-- content -->
 
         <div class="main col-12 px-5 m-0">
-            <h2 class="text-center">{{room.name}}</h2>
-            <h6 class="text-center font-italic">{{room.type}}</h6>
+            <h2 class="text-center">{{course.name}}</h2>
+            <h6 class="text-center font-italic">{{course.code}}</h6>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                   <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
@@ -95,7 +95,11 @@
                                     {% for day, col in row.items() %}
                                         {% if col|length > 0 %}
                                             {% if 'skip' not in col.keys() %}
-                                            <td class="{{col['label']}} taken text-center align-middle" rowspan="{{col['duration']}}"><a href="/course?code={{col['course']['code']}}">{{col['course']['name']}}<br>({{col['course']['code']}})</a></td>
+                                            <td class="{{col['label']}} taken text-center align-middle" rowspan="{{col['duration']}}">
+                                                {% for room in col['rooms'] %}
+                                                <a class="btn btn-sm btn-light my-1" href="/room?name={{room}}">{{room}}</a>
+                                            {% endfor %}
+                                            </td>
                                             {% endif %}
                                         {% else %}
                                         <td></td>
@@ -106,9 +110,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div class="tab-pane fade p-0 m-0" id="map-tab-panel" role="tabpanel" aria-labelledby="profile-tab" tabindex="0">
-                    <iframe src="https://plan.epfl.ch/?room={{room.name}}" height="700px" width="100%"></iframe>
                 </div>
             </div>
         </div>
