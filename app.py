@@ -112,25 +112,43 @@ def find_free_rooms():
 def find_semester():
     section = request.args.get('section')
     promo = request.args.get('semester')
+    
+    # Find all courses in plan
     courses_ids = list(map(lambda x: x['course'], list(db.plans.find({ 'section': section, 'promo': promo }))))
-
     courses = list(db.courses.find({ '_id' : { '$in' : courses_ids} }))
 
     if (len(courses) == 0):
-        return redirect(url_for('home'))
+        print('no courses')
 
+    # Find all booking
     bookings = list(db.booking.find({ 'course': {'$in' : list(map(lambda x: x['_id'], courses))}}))
 
+    # Find all rooms
+    list_rooms_id = list(map(lambda schedule: schedule['room'], bookings))
+    list_rooms = db.rooms.find({ '_id': { '$in': list_rooms_id }})
+
+    # Map course id to course object
+    map_courses_id = {}
+    for course in courses:
+        if (course.get('_id') not in map_courses_id):
+            map_courses_id[course.get('_id')] = course
+
+    # Map room id to room object
+    map_rooms_id = {}
+    for room in list_rooms:
+        if (room.get('_id') not in map_rooms_id):
+            map_rooms_id[room.get('_id')] = room
+
+    # Populate bookings with room and course objects
     for schedule in bookings:
-        course = db.courses.find_one({ '_id': schedule['course'] })
-        schedule['course'] = course
-        room = db.rooms.find_one({ '_id': schedule['room'] })
-        schedule['room'] = room
+        schedule['course'] = map_courses_id[schedule['course']]
+        schedule['room'] = map_rooms_id[schedule['room']]
 
     days = ['Lu', 'Ma', 'Me', 'Je', 'Ve']
     times = range(8, 20)
     timetable = dict()
     colspan = {'Lu' : 1, 'Ma' : 1, 'Me' : 1, 'Je' : 1, 'Ve' : 1}
+
 
     for i, time in enumerate(times):
         timetable[f'{time}-{time+1}'] = dict()
@@ -174,13 +192,11 @@ def find_semester():
             cols = len(timetable[f'{time}-{time+1}'][day])
             if (cols > colspan[day]):
                 colspan[day] = cols
-    
+
     # Fill colspan
     for time in times:
         for day in days:
             cols = len(timetable[f'{time}-{time+1}'][day])
-            if (day == 'Lu'):
-                print(f'{time}-{time+1} / {day} = {cols}')
             if (cols > 0 and cols < colspan[day]):
                 max_cols = cols
                 if ('skip' not in timetable[f'{time}-{time+1}'][day][0]):
