@@ -46,6 +46,12 @@
                 <li class="nav-item" role="presentation">
                   <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-tab-panel" type="button" role="tab" aria-controls="rooms-tab-panel" aria-selected="false">Salles</button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-tab-panel" type="button" role="tab" aria-controls="courses-tab-panel" aria-selected="false">Cours</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans-tab-panel" type="button" role="tab" aria-controls="plans-tab-panel" aria-selected="false">Semestres</button>
+                </li>
               </ul>   
         </header>
     
@@ -125,6 +131,54 @@
                         </table>
                     </div>
                 </div>
+                <div class="tab-pane fade p-0 px-5" id="courses-tab-panel" role="tabpanel" aria-labelledby="courses-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table id="courses_table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Code</th>
+                                    <th>Crédits</th>
+                                    <th>Semestre</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td><a href="/course?code={{course.name}}">{{ course.name }}</a></td>
+                                    <td>{{ course.code }}</td>
+                                    <td>{{ course.credits }}</td>
+                                    <td>{{ course.semester }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-0 px-5" id="plans-tab-panel" role="tabpanel" aria-labelledby="plans-tab" tabindex="0">
+                    <div class="table-responsive">
+                        <table id="plans_table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Code</th>
+                                    <th>Semestre</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for plan in plans %}
+                                <tr>
+                                    <td>{{ plan.section_name }}</td>
+                                    <td>{{ plan.section }}</td>
+                                    <td>{{ plan.semester }}</td>
+                                    <td><a class="btn btn-danger w-100" href="/find_semester?semester={{plan.semester}}&section={{plan.section}}">Voir</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     
@@ -138,9 +192,16 @@
 <link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='style.css') }}">
 
 <script src="https://unpkg.com/dragselect@latest/dist/ds.min.js"></script>
+<style>
+    table a {
+        color: #550000;
+    }
+</style>
 <script>
     $(document).ready( function () {
         $('#rooms_table').DataTable();
+        $('#courses_table').DataTable();
+        $('#plans_table').DataTable();
     } );
 
     const ds = new DragSelect({

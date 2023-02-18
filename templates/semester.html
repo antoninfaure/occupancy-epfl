@@ -47,6 +47,8 @@
         <!-- content -->
 
         <div class="main col-12 px-5 m-0">
+            <h2 class="text-center">{{plan.section_name}} ({{plan.section}})</h2>
+            <h6 class="text-center font-italic">{{plan.semester}}</h6>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                   <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
@@ -105,7 +107,7 @@
                                                     {% if 'skip' not in slot.keys() %}
                                                     <td class="{{slot['label']}} taken text-center align-middle" colspan="{{slot['colspan']}}" rowspan="{{slot['duration']}}"><a href="/course?code={{slot['course']['code']}}">{{slot['course']['name']}}<br>({{slot['course']['code']}})</a><br>
                                                     {% for room in slot['rooms'] %}
-                                                        <a class="btn btn-sm btn-light" href="/room?name={{room}}">{{room}}</a>
+                                                        <a class="btn btn-sm btn-light my-2" href="/room?name={{room}}">{{room}}</a>
                                                     {% endfor %}
                                                     </td>
                                                     {% endif %}

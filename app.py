@@ -21,6 +21,8 @@ def inject_now():
 @app.route('/', methods=['GET'])
 def home():
     rooms = db.rooms.find()
+    courses = db.courses.find()
+
     days = ['Lu', 'Ma', 'Me', 'Je', 'Ve']
     times = range(8, 20)
     timetable = dict()
@@ -29,8 +31,34 @@ def home():
         timetable[f'{time}-{time+1}'] = dict()
         for j, day in enumerate(days):
             timetable[f'{time}-{time+1}'][day] = dict()
+    
+    semesters = ['BA1', 'BA2', 'BA3', 'BA4', 'BA5', 'BA6']
+    sections = ['GM','AR','CGC','GC','EL','IN','SV','MA','MT','PH','MX','SIE','SC']
+    sections_name = {
+        'GM':'Génie mécanique',
+        'AR':'Architecture',
+        'CGC':'Chimie et génie chimique',
+        'GC':'Génie civil',
+        'EL':'Génie électrique et électronique ',
+        'IN':'Informatique',
+        'SV':'Ingénierie des sciences du vivant',
+        'MA':'Mathématiques',
+        'MT':'Microtechnique',
+        'PH':'Physique',
+        'MX':'Science et génie des matériaux',
+        'SIE':"Sciences et ingénierie de l'environnement",
+        'SC':'Systèmes de communication'
+    }
+    plans = []
+    for semester in semesters:
+        for section in sections:
+            plans.append({
+                'section': section,
+                'semester': semester,
+                'section_name': sections_name[section]
+            })
 
-    return render_template('index.html', rooms=rooms, timetable=timetable)
+    return render_template('index.html', plans=plans, courses=courses, rooms=rooms, timetable=timetable)
 
 @app.route('/room/', methods=['GET'])
 def room():
@@ -112,7 +140,7 @@ def find_free_rooms():
 def find_semester():
     section = request.args.get('section')
     promo = request.args.get('semester')
-    
+
     # Find all courses in plan
     courses_ids = list(map(lambda x: x['course'], list(db.plans.find({ 'section': section, 'promo': promo }))))
     courses = list(db.courses.find({ '_id' : { '$in' : courses_ids} }))
@@ -205,7 +233,23 @@ def find_semester():
                             max_cols = len(timetable[f'{k+time}-{k+time+1}'][day])
                 timetable[f'{time}-{time+1}'][day][0]['colspan'] = colspan[day] - max_cols + 1
 
-    return render_template('semester.html', colspan=colspan, timetable=timetable)
+    sections_name = {
+        'GM':'Génie mécanique',
+        'AR':'Architecture',
+        'CGC':'Chimie et génie chimique',
+        'GC':'Génie civil',
+        'EL':'Génie électrique et électronique ',
+        'IN':'Informatique',
+        'SV':'Ingénierie des sciences du vivant',
+        'MA':'Mathématiques',
+        'MT':'Microtechnique',
+        'PH':'Physique',
+        'MX':'Science et génie des matériaux',
+        'SIE':"Sciences et ingénierie de l'environnement",
+        'SC':'Systèmes de communication'
+    }
+
+    return render_template('semester.html', plan= {'section': section, 'semester': promo, 'section_name': sections_name[section] }, colspan=colspan, timetable=timetable)
 
 @app.route('/course', methods=['GET'])
 def find_course():
