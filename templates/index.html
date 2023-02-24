@@ -79,7 +79,7 @@
                     </div>
                 </div>
                 <div class="tab-pane fade show active p-0 px-5 m-0" id="find-tab-panel" role="tabpanel" aria-labelledby="find-tab" tabindex="0">
-                    <div class="table-responsive">
+                    <div class="table-responsive w-100">
                         <table class="table table-bordered table-striped text-center" id="select-table">
                             <thead>
                                 <tr>
@@ -113,7 +113,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="col-12 p-0 m-0 mb-4 text-center">
+                    <div class="col-12 p-0 mt-3 mx-0 mb-4 text-center">
                         <button class="btn btn-lg btn-danger" onclick="findFreeRooms()">Chercher</button>
                     </div>
                     <hr>
@@ -195,6 +195,15 @@
 <style>
     table a {
         color: #550000;
+    }
+
+    @media only screen and (max-width: 710px) {
+        tr td:nth-child(1) {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            -webkit-transform: rotate(180deg);
+            -moz-transform: rotate(180deg);
+        }
     }
 </style>
 <script>
