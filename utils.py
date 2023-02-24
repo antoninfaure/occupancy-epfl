@@ -1,4 +1,11 @@
-
+import requests
+from bs4 import BeautifulSoup
+import pymongo
+from pymongo import MongoClient
+import numpy as np
+import re
+import pickle 
+from urllib.parse import urlparse, parse_qs
 
 def getAllCours():
     URL_ROOT = 'https://edu.epfl.ch/'

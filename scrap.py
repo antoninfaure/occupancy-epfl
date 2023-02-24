@@ -1,12 +1,5 @@
-import pymongo
-from pymongo import MongoClient
 import config
-import requests
-from bs4 import BeautifulSoup
-import numpy as np
-import re
-import pickle 
-from urllib.parse import urlparse, parse_qs
+from utils import *
 
 client = MongoClient(f"mongodb+srv://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_URL}/?retryWrites=true&w=majority")
 
