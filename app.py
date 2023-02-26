@@ -20,7 +20,7 @@ def inject_now():
 
 @app.route('/', methods=['GET'])
 def home():
-    rooms = db.rooms.find()
+    rooms = db.rooms.find({ "available": True })
     courses = db.courses.find()
 
     days = ['Lu', 'Ma', 'Me', 'Je', 'Ve']
@@ -68,7 +68,7 @@ def room():
 
     name = re.sub(r"(?![A-Za-z0-9\-\.])", "", name)
  
-    room = db.rooms.find_one({'name': name})
+    room = db.rooms.find_one({'name': name, "available": True })
     if (room == None):
         return redirect(url_for('home'))
 

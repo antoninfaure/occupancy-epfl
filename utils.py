@@ -228,7 +228,7 @@ def list_entities(data):
                 rooms.append(day['rooms'])
 
     rooms = list(set(sum(rooms, [])))
-    rooms = [{ 'name': room } for room in rooms]
+    rooms = [{ 'name': room, "available": True } for room in rooms]
 
     # Get list of unique courses
     codes = []
