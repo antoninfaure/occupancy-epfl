@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Occupancy EPFL</title>
@@ -10,17 +11,24 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com"> 
-    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
 
 </head>
+
 <body>
     <div class="row m-0 p-0" style="min-height: 100%;">
 
@@ -37,7 +45,7 @@
                         </div>
                     </div>
                 </form>
-            </div> 
+            </div>
             <div class="col-12">
                 <a href="/" class="btn btn-dark mt-3 float-start">Accueil</a>
             </div>
@@ -47,18 +55,22 @@
         <!-- content -->
 
         <div class="main col-12 px-5 m-0">
-            <h2 class="text-center">{{plan.section_name}} ({{plan.section}})</h2>
-            <h6 class="text-center font-italic">{{plan.semester}}</h6>
+            <h2 class="text-center">{{studyplan.unit.name}}</h2>
+            <h6 class="text-center font-italic">{{studyplan.semester.name}}</h6>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel" aria-selected="true">Planning</button>
+                    <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab"
+                        data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel"
+                        aria-selected="true">Planning</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-tab-panel" type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Plan</button>
+                    <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-tab-panel"
+                        type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Plan</button>
                 </li>
-              </ul>
+            </ul>
             <div class="tab-content" id="tabContent">
-                <div class="tab-pane fade show active p-0" id="schedule-tab-panel" role="tabpanel" aria-labelledby="schedule-tab" tabindex="0">
+                <div class="tab-pane fade show active p-0" id="schedule-tab-panel" role="tabpanel"
+                    aria-labelledby="schedule-tab" tabindex="0">
                     <div class="row">
                         <div class="float-end">
                             <span class="taken cours p-2">Cours</span>
@@ -66,64 +78,69 @@
                             <span class="taken projet p-2">Projet, autre</span>
                         </div>
                     </div>
-                    <div class="table-responsive mt-3">
-                        <table class="table table-bordered table-striped text-center">
-                            <thead>
-                                <tr>
-                                    <td></td>
-                                    <td colspan="{{colspan['Lu']}}">
-                                        Lundi
-                                    </td>
-                                    <td colspan="{{colspan['Ma']}}">
-                                        Mardi
-                                    </td>
-                                    <td colspan="{{colspan['Me']}}">
-                                        Mercredi
-                                    </td>
-                                    <td colspan="{{colspan['Je']}}">
-                                        Jeudi
-                                    </td>
-                                    <td colspan="{{colspan['Ve']}}">
-                                        Vendredi
-                                    </td>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for time, row in timetable.items() %}
-                                <tr>
-                                    <td>{{time}}</td>
-                                    
-                                    {% for day, col in row.items() %}
-                                        
-                                        {% if col|length > 0 %}
-                                            {% set total_colspan = namespace(value=0) %}
-                                            {% for slot in col %}
-                                                {% if slot|length > 0 %}
-                                                    {% set total_colspan.value = total_colspan.value + slot['colspan'] %}
-                                                    {% if 'skip' not in slot.keys() %}
-                                                        <td class="{{slot['label']}} taken text-center align-middle" colspan="{{slot['colspan']}}" rowspan="{{slot['duration']}}"><a href="/course?code={{slot['course']['code']}}">{{slot['course']['name']}}<br>({{slot['course']['code']}})</a><br>
-                                                        {% for room in slot['rooms'] %}
-                                                            <a class="btn btn-sm btn-light my-2" href="/room?name={{room}}">{{room}}</a>
-                                                        {% endfor %}
-                                                        </td>
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if colspan[day] > total_colspan.value %}
-                                                {% for i in range(colspan[day] - total_colspan.value) %}
+                    <div id="timetablesCarousel" class="carousel slide" data-wrap="false">
+                        <button class="carousel-control left btn btn-danger" type="button"
+                            data-bs-target="#timetablesCarousel" data-bs-slide="prev" disabled>
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <div class="carousel-inner">
+                            {% for timetable in timetables %}
+                            <div class="carousel-item {{ 'active' if loop.index == 1 }}">
+                                <div class="table-responsive w-100">
+                                    <table class="table table-bordered table-striped text-center selectable-table">
+                                        <thead>
+                                            <tr>
                                                 <td></td>
+                                                {% for day in ['Lu', 'Ma', 'Me', 'Je', 'Ve'] %}
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>{{ day }}</span>
+                                                        {% if timetable['dates'][day] %}
+                                                        <span>{{ timetable['dates'][day] }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </td>
                                                 {% endfor %}
-                                            {% endif %}
-                                        {% else %}
-                                            {% for i in range(colspan[day]) %}
-                                            <td></td>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="area">
+                                            {% for time, row in timetable['timetable'].items() %}
+                                            <tr>
+                                                <td>{{ time }}</td>
+                                                {% for day, cells in row.items() %}
+                                                {% for cell in cells %}
+                                                {% if not cell.skip %}
+
+                                                {# Calculate colspan for concurrent courses and rowspan for continuous
+                                                schedules #}
+                                                <td class="{{ cell.label }}" colspan="{{ cell.colspan|default(1) }}"
+                                                    rowspan="{{ cell.rowspan|default(1) }}">
+
+                                                    {{ cell.course.code }} - {{ cell.course.name }}
+                                                    {% if cell.room %}
+                                                    <a class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip"
+                                                        data-bs-placement="top" title="{{ cell.room.name }}" href="/room?name={{cell.room.name}}">
+                                                        {{ cell.room.name }}
+                                                    </a>
+                                                    {% endif %}
+                                                </td>
+                                                {% endif %}
+                                                {% endfor %}
+                                                {% endfor %}
+                                            </tr>
                                             {% endfor %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control right btn btn-danger" type="button"
+                            data-bs-target="#timetablesCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -133,9 +150,14 @@
 
         <footer class="col-12 m-0 p-4 text-center mt-auto">
             <p>{{ now.year }} Copyright - Antonin Faure </p>
+            <span><a target="_blank" href="https://github.com/antoninfaure/occupancy-epfl">
+                    <img src="{{ url_for('static',filename='github-mark-white.png') }}" alt="github" width="30"
+                        height="30">
+                </a></span>
         </footer>
     </div>
 </body>
 
-<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='style.css') }}">
+
 </html>

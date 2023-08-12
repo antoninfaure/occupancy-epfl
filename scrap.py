@@ -1,116 +1,77 @@
-import config
 from utils import *
+from pymongo import MongoClient
+from config import *
+import config
+from tqdm import tqdm
+from datetime import datetime
+import db_utils
 
-client = MongoClient(f"mongodb+srv://{config.DB_USER}:{config.DB_PASSWORD}@{config.DB_URL}/?retryWrites=true&w=majority")
+client = MongoClient(f"mongodb+srv://{config.get('DB_USER')}:{config.get('DB_PASSWORD')}@{config.get('DB_URL')}/?retryWrites=true&w=majority")
 
-db = client[config.DB_NAME]
+db = client[config.get('DB_NAME')]
 
-DB_indices(db)
+db_utils.init(db)
 
-rooms_filter = [
-    'POL.N3.E',
-    'POL315.1',
-    'PHxx',
-    'Max412',
-    'STCC - Garden Full',
-    'ELG124',
-    'EXTRANEF126',
-    'CHCIGC'
-]
+### -- Create the semesters -- ###
 
-rooms_map = {
-    'CE1': 'CE11',
-    'CM4': 'CM14',
-    'BC07-08': ['BC07','BC08'],
-    'CM3': 'CM13',
-    'CE4': 'CE14',
-    'CM2': 'CM12',
-    'SG1': 'SG1138',
-    'CE6': 'CE16',
-    'CM5': 'CM15',
-    'CE5': 'CE15',
-    'CM1': 'CM11',
-    'CE2': 'CE12',
-    'CE3': 'CE13',
-    'RLC E1 240': 'RLCE1240'
-}
+# Fall 2023-2024
+create_new_semester(db,
+    name="Semestre d'automne 2023-2024",
+    start_date=datetime(2023, 9, 19),
+    end_date=datetime(2023, 12, 22),
+    type="fall",
+    available=True
+)
 
-map_semester = {
-    'Bachelor 1': 'BA1',
-    'Bachelor 2' : 'BA2',
-    'Bachelor 3' : 'BA3',
-    'Bachelor 4' : 'BA4',
-    'Bachelor 5' : 'BA5',
-    'Bachelor 6' : 'BA6',
-}
+# Spring 2023-2024
+create_new_semester(db,
+    name="Semestre de printemps 2023-2024",
+    start_date=datetime(2024, 2, 19),
+    end_date=datetime(2024, 5, 31),
+    type="spring",
+    available=True
+)
 
-map_section = {
-    'Génie mécanique': 'GM',
-    'Architecture': 'AR',
-    'Chimie et génie chimique': 'CGC',
-    'Génie civil': 'GC',
-    'Génie électrique et électronique ': 'EL',
-    'Informatique': 'IN',
-    'Ingénierie des sciences du vivant': 'SV',
-    'Mathématiques': 'MA',
-    'Microtechnique': 'MT',
-    'Physique': 'PH',
-    'Science et génie des matériaux': 'MX',
-    "Sciences et ingénierie de l'environnement": 'SIE',
-    'Systèmes de communication': 'SC',
-    'Chimie': 'CGC',
-    'Génie chimique': 'CGC'
- }
-
-# -- Get data for all courses on edu.epfl.ch with schedule information -- #
+### -- Get data for all courses on edu.epfl.ch with schedule information -- ###
 
 # List all courses url
-courses_url = getAllCours()
+courses_url = getAllCoursesUrl()
 
 # Filter unique
 courses_url = list(set(courses_url))
 
 # Parse all courses
-URL_ROOT = 'https://edu.epfl.ch/coursebook/fr/'
+URL_ROOT = 'https://edu.epfl.ch'
 courses = []
-for url in courses_url:
-    courses.append(parseCours(URL_ROOT + url))
+for url in tqdm(courses_url, total=len(courses_url)):
+    courses.append(parseCourse(URL_ROOT + url))
 
-# Filter None 
-data = list(filter(lambda x: x != None, courses))
+# Filter duplicates
+courses = filter_duplicates_courses(courses)
 
+### -- Create all courses -- ###
+create_courses(db, courses)
 
-# -- List all entities and relations -- #
+### -- Create all rooms -- ###
+create_rooms(db, courses)
 
-# List entities
-rooms, teachers, courses = list_entities(data)
+### -- Create all teachers -- ###
+create_teachers(db, courses)
 
-# Save our entities to DB
-update_db_entities(db, rooms, teachers, courses)
+### -- Create all bookings -- ###
+create_courses_bookings(db, courses)
 
-# List relations
-teach_in, booking = list_relations(data)
+### -- Create all teach_in -- ###
+create_teach_in(db, courses)
 
-# Save our relations to DB
-update_relations_db(db, teach_in, booking)
+### -- List planned_in -- ###
+planned_in = list_courses_plan_studyplans(courses)
 
+### -- Create all units -- ###
+create_units(db, planned_in)
 
-# -- Assign room type based on plan.epfl.ch -- #
+### -- Create all studyplans -- ###
+create_studyplans(db, planned_in)
 
-# Find all XML room objects
-rooms_xml = parse_all_levels()
-
-# Parse all XML room objects and list all unique types
-rooms_parsed = parse_all_rooms(rooms_xml)
-
-# Update all rooms in our DB with their type
-update_rooms_type(db, rooms_parsed)
-
-
-# -- List all study plans on edu.epfl.ch -- #
-
-# List all study plans
-study_plans = list_plans()
-
-# Update study plans in DB
-update_plans_db(db, study_plans)
+### -- Create all planned_in -- ###
+create_planned_in(db, planned_in)

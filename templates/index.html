@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Occupancy EPFL</title>
@@ -10,18 +11,25 @@
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
     <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
 
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.gstatic.com"> 
-    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato&family=Lato:wght@100;300;500;900&family=Nerko+One&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.2/css/jquery.dataTables.css">
-  
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.13.2/js/jquery.dataTables.js"></script>
 
 </head>
+
 <body>
     <div class="row m-0 p-0" style="min-height: 100%;">
         <!-- header -->
@@ -37,28 +45,36 @@
                             </div>
                         </div>
                     </form>
-                </div>        
+                </div>
             </div>
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="find-tab" data-bs-toggle="tab" data-bs-target="#find-tab-panel" type="button" role="tab" aria-controls="find-tab-panel" aria-selected="true">Salles libres</button>
-                  </li>
-                <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-tab-panel" type="button" role="tab" aria-controls="rooms-tab-panel" aria-selected="false">Salles</button>
+                    <button class="nav-link active" id="find-tab" data-bs-toggle="tab" data-bs-target="#find-tab-panel"
+                        type="button" role="tab" aria-controls="find-tab-panel" aria-selected="true">Salles
+                        libres</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-tab-panel" type="button" role="tab" aria-controls="courses-tab-panel" aria-selected="false">Cours</button>
+                    <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-tab-panel"
+                        type="button" role="tab" aria-controls="rooms-tab-panel" aria-selected="false">Salles</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans-tab-panel" type="button" role="tab" aria-controls="plans-tab-panel" aria-selected="false">Semestres</button>
+                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-tab-panel"
+                        type="button" role="tab" aria-controls="courses-tab-panel" aria-selected="false">Cours</button>
                 </li>
-              </ul>   
+                <!--
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans-tab-panel"
+                        type="button" role="tab" aria-controls="plans-tab-panel"
+                        aria-selected="false">Semestres</button>
+                </li>-->
+            </ul>
         </header>
-    
+
         <div class="main col-12 m-0 p-0 mb-5">
             <!-- content -->
             <div class="tab-content" id="tabContent">
-                <div class="tab-pane fade p-0 px-5" id="rooms-tab-panel" role="tabpanel" aria-labelledby="rooms-tab" tabindex="0">
+                <div class="tab-pane fade p-0 px-5" id="rooms-tab-panel" role="tabpanel" aria-labelledby="rooms-tab"
+                    tabindex="0">
                     <div class="table-responsive">
                         <table id="rooms_table" class="display" style="width:100%">
                             <thead>
@@ -78,40 +94,95 @@
                         </table>
                     </div>
                 </div>
-                <div class="tab-pane fade show active p-0 px-5 m-0" id="find-tab-panel" role="tabpanel" aria-labelledby="find-tab" tabindex="0">
-                    <div class="table-responsive w-100">
-                        <table class="table table-bordered table-striped text-center" id="select-table">
-                            <thead>
-                                <tr>
-                                    <td></td>
-                                    <td>
-                                        Lundi
-                                    </td>
-                                    <td>
-                                        Mardi
-                                    </td>
-                                    <td>
-                                        Mercredi
-                                    </td>
-                                    <td>
-                                        Jeudi
-                                    </td>
-                                    <td>
-                                        Vendredi
-                                    </td>
-                                </tr>
-                            </thead>
-                            <tbody id="area">
-                                {% for time, row in timetable.items() %}
-                                <tr>
-                                    <td>{{time}}</td>
-                                    {% for day, col in row.items() %}
-                                        <td class="selectable" data-day="{{day}}" data-time="{{time}}"></td>
-                                    {% endfor %}
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="tab-pane fade show active p-0 px-5 m-0" id="find-tab-panel" role="tabpanel"
+                    aria-labelledby="find-tab" tabindex="0">
+                    <div id="timetablesCarousel" class="carousel slide" data-wrap="false">
+                        <button class="carousel-control left btn btn-danger" type="button"
+                            data-bs-target="#timetablesCarousel" data-bs-slide="prev" disabled>
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <div class="carousel-inner">
+                            {% for timetable in timetables %}
+                            <div class="carousel-item {{ 'active' if loop.index == 1 }}">
+                                <div class="table-responsive w-100">
+                                    <table class="table table-bordered table-striped text-center selectable-table">
+                                        <thead>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>Lundi</span>
+                                                        {% for day, col in timetable['8-9'].items() %}
+                                                        {% if day == 'Lu' %}
+                                                        <span>{{ col.date_name }}</span>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>Mardi</span>
+                                                        {% for day, col in timetable['8-9'].items() %}
+                                                        {% if day == 'Ma' %}
+                                                        <span>{{ col.date_name }}</span>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>Mercredi</span>
+                                                        {% for day, col in timetable['8-9'].items() %}
+                                                        {% if day == 'Me' %}
+                                                        <span>{{ col.date_name }}</span>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>Jeudi</span>
+                                                        {% for day, col in timetable['8-9'].items() %}
+                                                        {% if day == 'Je' %}
+                                                        <span>{{ col.date_name }}</span>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="day-title">
+                                                        <span>Vendredi</span>
+                                                        {% for day, col in timetable['8-9'].items() %}
+                                                        {% if day == 'Ve' %}
+                                                        <span>{{ col.date_name }}</span>
+                                                        {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="area">
+                                            {% for time, row in timetable.items() %}
+                                            <tr>
+                                                <td>{{time}}</td>
+                                                {% for day, col in row.items() %}
+                                                <td class="{{ 'selectable' if not col.disabled else 'disabled' }}" data-day="{{day}}"
+                                                    data-time="{{time}}" data-date="{{col.date}}"></td>
+                                                {% endfor %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button class="carousel-control right btn btn-danger" type="button"
+                            data-bs-target="#timetablesCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
                     </div>
                     <div class="col-12 p-0 mt-3 mx-0 mb-4 text-center">
                         <button class="btn btn-lg btn-danger" onclick="findFreeRooms()">Chercher</button>
@@ -131,7 +202,8 @@
                         </table>
                     </div>
                 </div>
-                <div class="tab-pane fade p-0 px-5" id="courses-tab-panel" role="tabpanel" aria-labelledby="courses-tab" tabindex="0">
+                <div class="tab-pane fade p-0 px-5" id="courses-tab-panel" role="tabpanel" aria-labelledby="courses-tab"
+                    tabindex="0">
                     <div class="table-responsive">
                         <table id="courses_table" class="display" style="width:100%">
                             <thead>
@@ -155,41 +227,50 @@
                         </table>
                     </div>
                 </div>
-                <div class="tab-pane fade p-0 px-5" id="plans-tab-panel" role="tabpanel" aria-labelledby="plans-tab" tabindex="0">
+                <!--
+                <div class="tab-pane fade p-0 px-5" id="plans-tab-panel" role="tabpanel" aria-labelledby="plans-tab"
+                    tabindex="0">
                     <div class="table-responsive">
                         <table id="plans_table" class="display" style="width:100%">
                             <thead>
                                 <tr>
+                                    <th>Nom</th>
                                     <th>Section</th>
-                                    <th>Code</th>
                                     <th>Semestre</th>
+                                    <th>Année</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for plan in plans %}
+                                {% for studyplan in studyplans %}
                                 <tr>
-                                    <td>{{ plan.section_name }}</td>
-                                    <td>{{ plan.section }}</td>
-                                    <td>{{ plan.semester }}</td>
-                                    <td><a class="btn btn-danger w-100" href="/find_semester?semester={{plan.semester}}&section={{plan.section}}">Voir</a></td>
+                                    <td>{{ studyplan.unit[0].name }}</td>
+                                    <td>{{ studyplan.unit[0].section }}</td>
+                                    <td>{{ studyplan.unit[0].promo }}</td>
+                                    <td>{{ studyplan.semester[0].name }}</td>
+                                    <td><a class="btn btn-danger w-100"
+                                            href="/find_studyplan?studyplan={{studyplan._id}}">Voir</a></td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div>-->
             </div>
         </div>
-    
+
         <!-- footer -->
         <footer class="col-12 m-0 p-4 text-center mt-auto">
             <p>© Copyright {{ now.year }} - Antonin Faure</p>
+            <span><a target="_blank" href="https://github.com/antoninfaure/occupancy-epfl">
+                    <img src="{{ url_for('static',filename='github-mark-white.png') }}" alt="github" width="30"
+                        height="30">
+                </a></span>
         </footer>
     </div>
 </body>
 
-<link rel= "stylesheet" type= "text/css" href= "{{ url_for('static',filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='style.css') }}">
 
 <script src="https://unpkg.com/dragselect@latest/dist/ds.min.js"></script>
 <style>
@@ -198,24 +279,38 @@
     }
 
     @media only screen and (max-width: 710px) {
-        #select-table tr td:nth-child(1) {
+        .selectable-table tr td:nth-child(1) {
             writing-mode: vertical-lr;
-            transform: rotate(180deg);
-            -webkit-transform: rotate(180deg);
-            -moz-transform: rotate(180deg);
         }
     }
 </style>
 <script>
-    $(document).ready( function () {
+    $(document).ready(function () {
         $('#rooms_table').DataTable();
         $('#courses_table').DataTable();
         $('#plans_table').DataTable();
-    } );
+    });
+
+    new bootstrap.Carousel(document.getElementById('timetablesCarousel'), {
+        wrap: false
+    })
+
+    document.getElementById('timetablesCarousel').addEventListener('slid.bs.carousel', function (event) {
+        var $this = $(this);
+
+        $this.children('.carousel-control').removeAttr('disabled');
+
+        if ($('.carousel-inner .carousel-item:first').hasClass('active')) {
+            $this.children('.left.carousel-control').attr('disabled', true);
+        } else if ($('.carousel-inner .carousel-item:last').hasClass('active')) {
+            $this.children('.right.carousel-control').attr('disabled', true);
+        }
+
+    });
 
     const ds = new DragSelect({
         selectables: document.querySelectorAll('.selectable'),
-        area: document.getElementById('area'),
+        area: document.getElementById('timetablesCarousel'),
         draggability: false,
         multiSelectMode: true
     });
@@ -228,7 +323,7 @@
     var csrf_token = "{{ csrf_token() }}";
 
     $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
+        beforeSend: function (xhr, settings) {
             if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
                 xhr.setRequestHeader("X-CSRFToken", csrf_token);
             }
@@ -238,23 +333,23 @@
     function findFreeRooms() {
         selection = ds.getSelection()
         selection = selection.map(x => x = {
-            'day': $(x).data('day'),
+            'date': $(x).data('date'),
             'time': $(x).data('time')
         })
         $.ajax({
             url: '/find_free_rooms',
             type: "POST",
             data: JSON.stringify(selection),
-            contentType:"application/json; charset=utf-8",
-            dataType:"json",
-            success: function(results){
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (results) {
                 $('#available_rooms_table').DataTable({
                     data: results,
                     columns: [
-                        { 
+                        {
                             data: 'name',
                             render: function (data, type, row) {
-                                if(type === 'display'){
+                                if (type === 'display') {
                                     return $('<a>')
                                         .attr('href', '/room/?name=' + data)
                                         .text(data)
@@ -272,4 +367,5 @@
         })
     }
 </script>
+
 </html>

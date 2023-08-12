@@ -47,10 +47,24 @@ h2 {
 .ds-selected{
     background-color: red !important;
 }
-#select-table {
+.selectable-table {
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+}
+
+td.disabled {
+    background-color: #e0e0e0 !important;
+    color: #a0a0a0 !important;
+}
+.day-title {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.day-title span:last-child {
+    font-size: 0.8rem;
+    font-weight: 400;
 }
 .font-italic {
     font-style: italic;
@@ -58,6 +72,16 @@ h2 {
 table a {
     color: white;
 }
+
+.carousel {
+    display: flex;
+    margin: 20px 0;
+    
+}
+.carousel-inner {
+    padding: 0 50px;
+}
+
 
 @font-face {
     font-family: "GilroyBold";
