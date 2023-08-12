@@ -23,7 +23,57 @@ def inject_now():
 @app.route('/', methods=['GET'])
 def home():
     rooms = db.rooms.find({ "available": True })
-    courses = db.courses.find()
+    pipeline = [
+        {
+            "$match": {
+                "available": True
+            }
+        },
+        {
+            "$lookup": {
+                "from": "planned_in",
+                "localField": "_id",
+                "foreignField": "course_id",
+                "as": "plannedInData"
+            }
+        },
+        {
+            "$unwind": "$plannedInData"
+        },
+        {
+            "$lookup": {
+                "from": "studyplans",
+                "localField": "plannedInData.studyplan_id",
+                "foreignField": "_id",
+                "as": "studyplan"
+            }
+        },
+        {
+            "$unwind": "$studyplan"
+        },
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "studyplan.semester_id",
+                "foreignField": "_id",
+                "as": "semester"
+            }
+        },
+        {
+            "$unwind": "$semester"
+        },
+        {
+            "$group": {
+                "_id": "$_id",
+                "name": { "$first": "$name" },
+                "code": { "$first": "$code" },
+                "credits": { "$first": "$credits" },
+                "semester": { "$first": "$semester" }
+            }
+        }
+    ]
+
+    courses = list(db.courses.aggregate(pipeline))
 
     days_mapping = {
         0: 'Lu',

@@ -220,7 +220,14 @@
                                     <td><a href="/course?code={{course.code}}">{{ course.name }}</a></td>
                                     <td>{{ course.code }}</td>
                                     <td>{{ course.credits }}</td>
-                                    <td>{{ course.semester }}</td>
+                                    <td class="d-flex gap-3 align-items-center">
+                                        <span>{{ course.semester.name }}</span>
+                                        {% if course.semester.type == "fall" %}
+                                        <span class="badge bg-danger text-white">Automne</span>
+                                        {% else %}
+                                        <span class="badge bg-primary text-white">Printemps</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
