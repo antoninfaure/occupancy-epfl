@@ -491,6 +491,7 @@ def find_course():
     
     # Create a basic timetable structure
     days_mapping = {0: 'Lu', 1: 'Ma', 2: 'Me', 3: 'Je', 4: 'Ve'}
+    days_mapping_name = {0: 'Lundi', 1: 'Mardi', 2: 'Mercredi', 3: 'Jeudi', 4: 'Vendredi'}
     times = range(8, 20)
     timetable_template = dict()
     timetable_template['timetable'] = dict()
@@ -513,7 +514,7 @@ def find_course():
         week_timetable = deepcopy(timetable_template)
         for day_offset in range(5):  # 5-day week
             current_date = week_start + timedelta(days=day_offset)
-            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
+            week_timetable['dates'][days_mapping_name[current_date.weekday()]] = {
                 'date_name': current_date.strftime('%d/%m/%Y')
             }
             for time in times:
