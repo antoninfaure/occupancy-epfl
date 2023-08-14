@@ -84,7 +84,7 @@ def init(db):
 
         try:
             db.command("collMod", "units", validator=unit_validator)
-            db.units.create_index([("code", pymongo.ASCENDING)], name="unit_unique", unique=True)
+            db.units.create_index([("name", pymongo.ASCENDING)], name="unit_unique", unique=True)
         except Exception as e:
             print(e)
 

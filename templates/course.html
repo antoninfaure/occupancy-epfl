@@ -57,6 +57,35 @@
         <div class="main col-12 px-5 m-0">
             <h2 class="text-center">{{course.name}}</h2>
             <h6 class="text-center font-italic">{{course.code}}</h6>
+            <div class="row p-0 m-0">
+                <div class="col-12 p-0 my-3 m-0 ">
+                    <ul class="p-0 m-0 d-flex flex-row justify-content-center gap-5 align-items-center
+                    ">
+                        <li class="d-flex flex-column">
+                            <span class="fw-bold">Enseignants</span>
+                            <span>
+                                {% for teacher in course.teachers %}
+                                <a class="badge bg-dark text-white my-1" href="{{teacher.people_url}}" target="_blank">{{ teacher.name }}</a>
+                                {% endfor %}
+                            </span>
+                        </li>
+                        <li class="d-flex flex-column">
+                            <span class="fw-bold">Semestre</span>
+                            <span class="d-flex gap-2 align-items-center"><span>{{ course.semester.name }}</span>
+                                {% if course.semester.type == "fall" %}
+                                <span class="badge bg-danger text-white">Automne</span>
+                                {% else %}
+                                <span class="badge bg-primary text-white">Printemps</span>
+                                {% endif %}
+                            </span>
+                        </li>
+                        <li class="d-flex flex-column">
+                            <span class="fw-bold">Crédits</span>
+                            <span>{{ course.credits }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab"
@@ -92,7 +121,7 @@
                                         <thead>
                                             <tr>
                                                 <td></td>
-                                                {% for day in ['Lu', 'Ma', 'Me', 'Je', 'Ve'] %}
+                                                {% for day in timetable['dates'].keys() %}
                                                 <td>
                                                     <div class="day-title">
                                                         <span>{{ day }}</span>
@@ -109,22 +138,23 @@
                                             <tr>
                                                 <td>{{time}}</td>
                                                 {% for day, col in row.items() %}
-                                                    {% if col|length > 0 %}
-                                                        {% if 'rooms' in col %}
-                                                        <td class="{{col['label']}} taken text-center align-middle"
-                                                            rowspan="{{col['duration']}}">
-                                                            {% for room in col['rooms'] %}
-                                                            <a class="btn btn-sm btn-light my-1" href="/room?name={{room}}">{{room}}</a>
-                                                            {% endfor %}
-                                                        </td>
-                                                        {% elif 'skip' in col %}
-                    
-                                                        {% else %}
-                                                        <td></td>
-                                                        {% endif %}
-                                                        {% else %}
-                                                        <td></td>
-                                                    {% endif %}
+                                                {% if col|length > 0 %}
+                                                {% if 'rooms' in col %}
+                                                <td class="{{col['label']}} taken text-center align-middle"
+                                                    rowspan="{{col['duration']}}">
+                                                    {% for room in col['rooms'] %}
+                                                    <a class="btn btn-sm btn-light my-1"
+                                                        href="/room?name={{room}}">{{room}}</a>
+                                                    {% endfor %}
+                                                </td>
+                                                {% elif 'skip' in col %}
+
+                                                {% else %}
+                                                <td></td>
+                                                {% endif %}
+                                                {% else %}
+                                                <td></td>
+                                                {% endif %}
                                                 {% endfor %}
                                             </tr>
                                             {% endfor %}
@@ -148,7 +178,7 @@
         <!-- footer -->
 
         <footer class="col-12 m-0 p-4 text-center mt-auto">
-            <p>{{ now.year }} Copyright - Antonin Faure </p>
+            <p>made by <a href="https://github.com/antoninfaure" class="text-white">Antonin Faure</a></p>
             <span><a target="_blank" href="https://github.com/antoninfaure/occupancy-epfl">
                     <img src="{{ url_for('static',filename='github-mark-white.png') }}" alt="github" width="30"
                         height="30">

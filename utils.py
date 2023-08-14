@@ -381,8 +381,8 @@ def create_teach_in(db, courses):
             found = False
             for db_teach in db_teach_in:
                 if (
-                    db_teach.get("teacher") == db_teacher.get("_id") and
-                    db_teach.get("course") == db_course.get("_id")
+                    db_teach.get("teacher_id") == db_teacher.get("_id") and
+                    db_teach.get("course_id") == db_course.get("_id")
                 ):
                     found = True
                     break
@@ -391,8 +391,8 @@ def create_teach_in(db, courses):
                 continue
 
             new_teach_in.append({
-                "teacher": db_teacher.get("_id"),
-                "course": db_course.get("_id"),
+                "teacher_id": db_teacher.get("_id"),
+                "course_id": db_course.get("_id"),
                 "available": True
             })
 
@@ -796,11 +796,12 @@ def list_plan_rooms():
 def list_courses_plan_studyplans():
     URL_BA = "https://edu.epfl.ch/studyplan/fr/bachelor/"
     URL_PROPE = "https://edu.epfl.ch/studyplan/fr/propedeutique/"
+    URL_MASTER = "https://edu.epfl.ch/studyplan/fr/master/"
     URL_ROOT = 'https://edu.epfl.ch/'
 
     # Find all BA study plans for each section and all courses in them
     plans_etudes = []
-    for url in [URL_BA, URL_PROPE]:
+    for url in [URL_MASTER, URL_BA, URL_PROPE]:
         page = requests.get(url)
         soup = BeautifulSoup(page.content, "html.parser")
         sections = [x.get('href') for x in soup.find('main').find('ul').findAll('a')]
@@ -827,7 +828,7 @@ def list_courses_plan_studyplans():
                         plans_etudes.append({
                             "code": code,
                             "promo": MAP_PROMOS[semester],
-                            "section": MAP_SECTIONS[section_name]
+                            "section": section_name
                         })
 
     return plans_etudes
@@ -845,20 +846,19 @@ def create_units(db, planned_in):
     units = list_units(planned_in)
 
     db_units = list(db.units.find())
-    db_units_codes = [unit.get('code') for unit in db_units]
+    db_units_names = [unit.get('name') for unit in db_units]
 
     map_promo_to_name = {v: k for k, v in MAP_PROMOS.items()}
-    map_section_to_name = {v: k for k, v in MAP_SECTIONS.items()}
 
     new_units = []
-    for unit in units:
-        unit_code = unit[1] + '-' + unit[0]
-        if (unit_code not in db_units_codes):
+    for unit in tqdm(units):
+        unit_name = unit[1] + ' - ' + map_promo_to_name[unit[0]]
+        if (unit_name not in db_units_names):
             new_units.append({
-                'code': unit_code,
+                'code': MAP_SECTIONS[unit[1]] + '-' + unit[0],
                 'promo': unit[0],
-                'section': unit[1],
-                'name': map_section_to_name[unit[1]] + ' - ' + map_promo_to_name[unit[0]],
+                'section': MAP_SECTIONS[unit[1]],
+                'name': unit_name,
                 'available': True
             })
 
@@ -882,6 +882,8 @@ def create_studyplans(db, planned_in):
 
     db_units = list(db.units.find({ 'available': True }))
 
+    map_promo_to_name = {v: k for k, v in MAP_PROMOS.items()}
+
     unique_planned_in = []
     unique_planned_in_ids = []
     for plan in tqdm(planned_in):
@@ -891,7 +893,8 @@ def create_studyplans(db, planned_in):
 
     new_studyplans = []
     for plan in unique_planned_in:
-        plan_unit = list(filter(lambda unit: unit['promo'] == plan['promo'] and unit['section'] == plan['section'], db_units))[0]
+        plan_name = plan['section'] + ' - ' + map_promo_to_name[plan['promo']]
+        plan_unit = list(filter(lambda unit: unit['name'] == plan_name, db_units))[0]
         if (plan_unit == None):
             print('Unit not found')
             continue
@@ -959,9 +962,11 @@ def create_planned_in(db, planned_in):
         'available': True
     }))
 
+    map_promo_to_name = {v: k for k, v in MAP_PROMOS.items()}
+
     new_planned_in = []
     for plan in tqdm(planned_in):
-        plan_unit_code = plan['section'] + '-' + plan['promo']
+        plan_unit_name = plan['section'] + ' - ' + map_promo_to_name[plan['promo']]
         plan_semester = MAP_SEMESTERS[plan.get('promo')]
 
         db_course = db.courses.find_one({
@@ -970,7 +975,13 @@ def create_planned_in(db, planned_in):
         if (db_course == None):
             continue
 
-        studyplan = list(filter(lambda studyplan: studyplan['unit'][0].get('code') == plan_unit_code and studyplan['semester'][0].get('type') == plan_semester, db_studyplans))[0]
+        studyplan = list(filter(lambda studyplan: studyplan['unit'][0].get('name') == plan_unit_name and studyplan['semester'][0].get('type') == plan_semester, db_studyplans))
+
+        if (len(studyplan) == 0):
+            print('Studyplan not found')
+            continue
+
+        studyplan = studyplan[0]
 
         if (studyplan == None):
             print('Studyplan not found')

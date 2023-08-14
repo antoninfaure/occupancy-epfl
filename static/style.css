@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     min-height: 100%;
     height: 100%;
     min-width: 100%;
@@ -6,25 +7,31 @@ html, body {
     padding: 0;
     font-family: 'Lato', sans-serif;
 }
+
 footer {
     background-color: red;
     color: white;
 }
+
 a {
     text-decoration: underline;
     color: #550000;
 }
+
 h1 {
     font-family: 'GilroyBold';
     font-size: 3rem;
 }
+
 h1 a {
     color: inherit;
     text-decoration: inherit;
 }
+
 h1 a:hover {
     text-decoration: underline;
 }
+
 h2 {
     font-weight: 600;
 }
@@ -33,42 +40,53 @@ h2 {
 .taken {
     color: white !important;
 }
+
 .projet {
     background-color: #8e0000 !important;
 }
+
 .cours {
     background-color: red !important;
 }
+
 .exercice {
     background-color: #b51f1f !important;
 }
 
 /* Select timetable */
-.ds-selected{
+.ds-selected {
     background-color: red !important;
 }
+
 .selectable-table {
-    -webkit-user-select: none; /* Safari */
-    -ms-user-select: none; /* IE 10 and IE 11 */
-    user-select: none; /* Standard syntax */
+    -webkit-user-select: none;
+    /* Safari */
+    -ms-user-select: none;
+    /* IE 10 and IE 11 */
+    user-select: none;
+    /* Standard syntax */
 }
 
 td.disabled {
     background-color: #e0e0e0 !important;
     color: #a0a0a0 !important;
 }
+
 .day-title {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
+
 .day-title span:last-child {
     font-size: 0.8rem;
     font-weight: 400;
 }
+
 .font-italic {
     font-style: italic;
 }
+
 table a {
     color: white;
 }
@@ -76,10 +94,53 @@ table a {
 .carousel {
     display: flex;
     margin: 20px 0;
-    
+
 }
+
 .carousel-inner {
     padding: 0 50px;
+}
+
+.carousel .carousel-control.left {
+    order: 1;
+}
+
+.carousel .carousel-control.right {
+    order: 3;
+}
+
+.carousel .carousel-inner {
+    order: 2;
+}
+
+@media screen and (max-width: 768px) {
+    .carousel {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .carousel .carousel-control.left {
+        order: 2;
+        display: flex;
+        margin-right: auto;
+        width: 45%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .carousel .carousel-control.right {
+        order: 3;
+        display: flex;
+        margin-left: auto;
+        width: 45%;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .carousel .carousel-inner {
+        order: 1;
+        width: 100%;
+        padding: 0;
+    }
 }
 
 

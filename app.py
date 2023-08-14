@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 import re
 from copy import deepcopy
 from bson.objectid import ObjectId
+import time as t_time
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
@@ -22,58 +23,77 @@ def inject_now():
 
 @app.route('/', methods=['GET'])
 def home():
+
+    # List all rooms
     rooms = db.rooms.find({ "available": True })
-    pipeline = [
+
+    # List all courses with their semester
+    courses = list(db.planned_in.aggregate([
         {
             "$match": {
                 "available": True
             }
         },
         {
-            "$lookup": {
-                "from": "planned_in",
-                "localField": "_id",
-                "foreignField": "course_id",
-                "as": "plannedInData"
+            "$group": {
+                "_id": "$course_id",
+                "studyplan_id": { "$first": "$studyplan_id" } # only consider the first studyplan_id
             }
         },
         {
-            "$unwind": "$plannedInData"
+            "$lookup": {
+                "from": "courses",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "courseDetails"
+            }
         },
         {
             "$lookup": {
                 "from": "studyplans",
-                "localField": "plannedInData.studyplan_id",
+                "localField": "studyplan_id",
                 "foreignField": "_id",
-                "as": "studyplan"
+                "as": "studyplanDetails"
             }
-        },
-        {
-            "$unwind": "$studyplan"
         },
         {
             "$lookup": {
                 "from": "semesters",
-                "localField": "studyplan.semester_id",
+                "localField": "studyplanDetails.semester_id",
                 "foreignField": "_id",
-                "as": "semester"
+                "as": "semesterDetails"
             }
         },
         {
-            "$unwind": "$semester"
+            "$unwind": "$courseDetails"
         },
         {
-            "$group": {
-                "_id": "$_id",
-                "name": { "$first": "$name" },
-                "code": { "$first": "$code" },
-                "credits": { "$first": "$credits" },
-                "semester": { "$first": "$semester" }
+            "$unwind": "$semesterDetails" 
+        },
+        {
+            "$project": { # set courseDetails as root and semesterDetails as semester
+                "_id": 0, 
+                "mergedDoc": { "$mergeObjects": ["$$ROOT", "$courseDetails"] },
+                "semester": "$semesterDetails"
+            }
+        },
+        {
+            "$replaceRoot": { # replace root with mergedDoc
+                "newRoot": {
+                    "$mergeObjects": ["$mergedDoc", { "semester": "$semester" }]
+                }
+            }
+        },
+        {
+            "$project": { # remove unnecessary fields
+                "mergedDoc": 0,
+                "semesterDetails": 0,
+                "studyplanDetails": 0,
+                "courseDetails": 0,
+                "studyplan_id": 0,
             }
         }
-    ]
-
-    courses = list(db.courses.aggregate(pipeline))
+    ]))
 
     days_mapping = {
         0: 'Lu',
@@ -117,7 +137,8 @@ def home():
         timetables.append(week_timetable)
         week_start = week_start + timedelta(days=7)
     
-    pipeline = [
+
+    studyplans = list(db.studyplans.aggregate([
         {
             "$lookup": {
                 "from": "units",
@@ -128,8 +149,8 @@ def home():
         },
         {
             "$lookup": {
-                "from": "semesters",  # Assuming the name of your semester collection is 'semesters'
-                "localField": "semester_id",  # Assuming the field in studyplans referring to semester is 'semester_id'
+                "from": "semesters",
+                "localField": "semester_id",
                 "foreignField": "_id",
                 "as": "semester"
             }
@@ -139,9 +160,7 @@ def home():
                 "available": True
             }
         }
-    ]
-
-    studyplans = list(db.studyplans.aggregate(pipeline))
+    ]))
 
     return render_template('index.html', studyplans=studyplans, courses=courses, rooms=rooms, timetables=timetables)
 
@@ -472,6 +491,8 @@ def find_course():
     if (course == None):
         return abort(404)
     
+    print(course)
+    
     # find the plannedin that contains this course and populate the studyplan, then find the semester of the studyplan
     #  
     semester = list(db.planned_in.aggregate([
@@ -512,12 +533,53 @@ def find_course():
         {
             "$limit": 1
         }
-    ]))[0]
+    ]))
+
+    print(semester)
+
+    if (semester == None or len(semester) == 0):
+        return redirect(url_for('home'))
+    
+    semester = semester[0]['semester']
+
+    print(semester)
 
     if (semester == None):
         return redirect(url_for('home'))
     
-    semester = semester['semester']
+    course['semester'] = semester
+
+    # list teachers
+    teachers = list(db.teach_in.aggregate([
+        {
+            "$match": {
+                'course_id': course['_id'],
+                'available': True
+            }
+        },
+        {
+            "$lookup": {
+                "from": "teachers",
+                "localField": "teacher_id",
+                "foreignField": "_id",
+                "as": "teacher"
+            }
+        },
+        {
+            "$unwind": "$teacher"
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "teacher": 1
+            }
+        }
+    ]))
+
+    course['teachers'] = [teacher['teacher'] for teacher in teachers if teacher != None]
+
+    print(course['teachers'])
+
 
     bookings = list(db.booking.aggregate([
         {

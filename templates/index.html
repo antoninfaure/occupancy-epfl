@@ -184,8 +184,9 @@
                             <span class="visually-hidden">Next</span>
                         </button>
                     </div>
-                    <div class="col-12 p-0 mt-3 mx-0 mb-4 text-center">
+                    <div class="col-12 p-0 mt-3 mx-0 mb-4 d-flex align-items-center justify-content-center gap-3">
                         <button class="btn btn-lg btn-danger" onclick="findFreeRooms()">Chercher</button>
+                        <button class="btn btn-lg btn-secondary" onclick="resetFind()">Réinitialiser</button>
                     </div>
                     <hr>
                     <h4><strong>Salles disponibles</strong></h4>
@@ -221,11 +222,13 @@
                                     <td>{{ course.code }}</td>
                                     <td>{{ course.credits }}</td>
                                     <td class="d-flex gap-3 align-items-center">
+                                        {% if course.semester %}
                                         <span>{{ course.semester.name }}</span>
                                         {% if course.semester.type == "fall" %}
                                         <span class="badge bg-danger text-white">Automne</span>
                                         {% else %}
                                         <span class="badge bg-primary text-white">Printemps</span>
+                                        {% endif %}
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -268,7 +271,7 @@
 
         <!-- footer -->
         <footer class="col-12 m-0 p-4 text-center mt-auto">
-            <p>© Copyright {{ now.year }} - Antonin Faure</p>
+            <p>made by <a href="https://github.com/antoninfaure" class="text-white">Antonin Faure</a></p>
             <span><a target="_blank" href="https://github.com/antoninfaure/occupancy-epfl">
                     <img src="{{ url_for('static',filename='github-mark-white.png') }}" alt="github" width="30"
                         height="30">
@@ -372,6 +375,10 @@
                 });
             }
         })
+    }
+
+    function resetFind() {
+        ds.clearSelection()
     }
 </script>
 

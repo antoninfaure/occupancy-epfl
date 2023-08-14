@@ -6,9 +6,9 @@ from tqdm import tqdm
 from datetime import datetime
 import db_utils
 
-client = MongoClient(f"mongodb+srv://{config.get('DB_USER')}:{config.get('DB_PASSWORD')}@{config.get('DB_URL')}/?retryWrites=true&w=majority")
+client = MongoClient(f"mongodb+srv://{DB_USER}:{DB_PASSWORD}@{DB_URL}/?retryWrites=true&w=majority")
 
-db = client[config.get('DB_NAME')]
+db = client[DB_NAME]
 
 db_utils.init(db)
 
@@ -65,7 +65,7 @@ create_courses_bookings(db, courses)
 create_teach_in(db, courses)
 
 ### -- List planned_in -- ###
-planned_in = list_courses_plan_studyplans(courses)
+planned_in = list_courses_plan_studyplans()
 
 ### -- Create all units -- ###
 create_units(db, planned_in)
