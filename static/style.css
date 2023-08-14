@@ -94,26 +94,44 @@ table a {
 .carousel {
     display: flex;
     margin: 20px 0;
+    flex-wrap: wrap;
+    justify-content: center;
 
 }
 
 .carousel-inner {
     padding: 0 50px;
+    width: 90%;
+    overflow: auto;
 }
 
 .carousel .carousel-control.left {
     order: 1;
+    width: min(5%, 60px);
 }
 
 .carousel .carousel-control.right {
     order: 3;
+    width: min(5%, 60px);
 }
 
 .carousel .carousel-inner {
     order: 2;
 }
 
-@media screen and (max-width: 768px) {
+.carousel-indicators {
+    position: relative;
+    order: 4;
+    width: 100%;
+    margin: 10px auto ;
+}
+
+.carousel-indicators button {
+    background-color: black !important;
+    height: 10px !important;
+}
+
+@media screen and (max-width: 1024px) {
     .carousel {
         display: flex;
         flex-wrap: wrap;
@@ -140,6 +158,10 @@ table a {
         order: 1;
         width: 100%;
         padding: 0;
+    }
+
+    .carousel-indicators {
+        display: flex;
     }
 }
 

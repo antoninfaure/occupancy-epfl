@@ -39,15 +39,15 @@
             <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
                 <form action="/room" method="get">
                     <div class="input-group justify-content-center">
-                        <input type="text" autofocus class="form-control" name="name" placeholder="nom salle...">
+                        <input type="text" autofocus class="form-control" name="name" placeholder="room name... (ex: CE13)">
                         <div class="input-group-append">
-                            <button type="submit" class="btn btn-danger">Chercher</button>
+                            <button type="submit" class="btn btn-danger">Search</button>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="col-12">
-                <a href="/" class="btn btn-dark mt-3 float-start">Accueil</a>
+                <a href="/" class="btn btn-dark mt-3 float-start">Home</a>
             </div>
         </header>
 
@@ -61,11 +61,11 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab"
                         data-bs-target="#schedule-tab-panel" type="button" role="tab" aria-controls="schedule-tab-panel"
-                        aria-selected="true">Planning</button>
+                        aria-selected="true">Schedule</button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-tab-panel"
-                        type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Plan</button>
+                        type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Map</button>
                 </li>
             </ul>
             <div class="tab-content" id="tabContent">
@@ -73,9 +73,9 @@
                     aria-labelledby="schedule-tab" tabindex="0">
                     <div class="row">
                         <div class="float-end">
-                            <span class="taken cours p-2">Cours</span>
-                            <span class="taken exercice p-2">Exercice, TP</span>
-                            <span class="taken projet p-2">Projet, autre</span>
+                            <span class="taken cours p-2">Lecture</span>
+                            <span class="taken exercice p-2">Exercise, TP</span>
+                            <span class="taken projet p-2">Project, other</span>
                         </div>
                     </div>
                     <div id="timetablesCarousel" class="carousel slide" data-wrap="false">
@@ -141,6 +141,14 @@
                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Next</span>
                         </button>
+                        <div class="carousel-indicators">
+                            {% for timetable in timetables %}
+                            <button type="button" data-bs-target="#timetablesCarousel"
+                                data-bs-slide-to="{{loop.index0}}"
+                                class="{% if loop.index == 1 %}{{'active'}}{% endif %}" aria-current="true"
+                                aria-label="Week {{ loop.index}}"></button>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>

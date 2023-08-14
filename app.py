@@ -95,21 +95,17 @@ def home():
         }
     ]))
 
-    days_mapping = {
-        0: 'Lu',
-        1: 'Ma',
-        2: 'Me',
-        3: 'Je',
-        4: 'Ve'
-    }
-
+    # Create a basic timetable structure
+    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
     times = range(8, 20)
     timetable_template = dict()
+    timetable_template['timetable'] = dict()
+    timetable_template['dates'] = dict()
 
     for time in times:
-        timetable_template[f'{time}-{time+1}'] = dict()
+        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
         for day in days_mapping.values():
-            timetable_template[f'{time}-{time+1}'][day] = dict()
+            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
 
     # Find the next semester
     semester = db.semesters.find_one({ "available": True }, sort=[("end_date", 1)])
@@ -126,9 +122,12 @@ def home():
         week_timetable = deepcopy(timetable_template)
         for day_offset in range(5):  # We are considering a 5-day week
             current_date = week_start + timedelta(days=day_offset)
+            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
+                'date_name': current_date.strftime('%d/%m/%Y')
+            }
             disabled = current_date < start_date
             for time in times:
-                week_timetable[f'{time}-{time+1}'][days_mapping[current_date.weekday()]] = {
+                week_timetable['timetable'][f'{time}-{time+1}'][days_mapping[current_date.weekday()]] = {
                     'date': current_date,
                     'disabled': disabled,
                     'date_name': current_date.strftime('%d/%m/%Y')
@@ -180,7 +179,7 @@ def room():
     semester = db.semesters.find_one({ "available": True }, sort=[("end_date", 1)])
 
     # Create a basic timetable structure
-    days_mapping = {0: 'Lu', 1: 'Ma', 2: 'Me', 3: 'Je', 4: 'Ve'}
+    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
     times = range(8, 20)
     timetable_template = dict()
     timetable_template['timetable'] = dict()
@@ -309,8 +308,6 @@ def find_free_rooms():
 
     rooms_names = [{'name': x['name'], 'type': x['type']} for x in list(free_rooms)]
 
-    print("results")
-
     return rooms_names
 
 @app.route('/find_studyplan', methods=['GET'])
@@ -426,16 +423,25 @@ def find_studyplan():
     bookings = list(db.booking.aggregate(pipeline))
 
     def generate_week_timetable(week_start, all_bookings):
-        days = ['Lu', 'Ma', 'Me', 'Je', 'Ve']
+        days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
         times = range(8, 20)
 
         week_timetable = dict()
+        week_timetable['timetable'] = dict()
+        week_timetable['dates'] = dict()
+
+        for time in times:
+            week_timetable['timetable'][f'{time}-{time+1}'] = dict()
+            for day in days_mapping.values():
+                week_timetable['timetable'][f'{time}-{time+1}'][day] = dict()
         
-        week_timetable['timetable'] = {f'{time}-{time+1}': {day: [] for day in days} for time in times}
-        week_timetable['dates'] = {day: date.strftime('%d/%m/%Y') for day, date in zip(days, [week_start + timedelta(days=day_offset) for day_offset in range(5)])}
 
         for day_offset in range(5):  # Considering a 5-day week
             current_date = week_start + timedelta(days=day_offset)
+
+            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
+                'date_name': current_date.strftime('%d/%m/%Y')
+            }
             
             for time in times:
                 hour_start = datetime.combine(current_date, dt_time(time, 0))
@@ -449,7 +455,7 @@ def find_studyplan():
                     end_hour = booking['end_datetime'].hour
                     duration = end_hour - start_hour
                     
-                    week_timetable['timetable'][f'{start_hour}-{start_hour+1}'][days[day_offset]].append({
+                    week_timetable['timetable'][f'{start_hour}-{start_hour+1}'][days_mapping[current_date.weekday()]].append({
                         'course': booking['course'],
                         'room': booking['room'],
                         'rowspan': duration,
@@ -458,7 +464,7 @@ def find_studyplan():
 
         # Adjust for continuous multi-hour courses
         for time in times:
-            for day in days:
+            for day in days_mapping.values():
                 slots = week_timetable['timetable'][f'{time}-{time+1}'][day]
                 for slot in slots:
                     if 'rowspan' not in slot:
