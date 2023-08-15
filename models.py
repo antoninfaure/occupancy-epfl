@@ -226,6 +226,10 @@ semester_validator = {
             "available": {
                 "bsonType": "bool",
                 "description": "must be a bool and is required"
+            },
+            "skip_dates": {
+                "bsonType": "array",
+                "description": "must be an array of dates"
             }
         }
     }

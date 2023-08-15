@@ -169,6 +169,7 @@ table a {
         order: 1;
         width: 100%;
         padding: 0;
+        margin-bottom: 30px;
     }
 
     .carousel-indicators {

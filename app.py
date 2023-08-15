@@ -432,7 +432,7 @@ def find_course():
             timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
 
     # Generate timetables for the semester
-    start_date = datetime.now().date()
+    start_date = semester['start_date'].date()
     end_date = semester['end_date'].date()
     timetables = []
 
@@ -449,6 +449,18 @@ def find_course():
             for time in times:
                 time_key = f'{time}-{time+1}'
                 day_key = days_mapping[current_date.weekday()]
+
+                if current_date < start_date:
+                    week_timetable['timetable'][time_key][day_key] = {
+                        'disabled': True,
+                    }
+                    continue
+
+                if 'skip_dates' in semester and current_date in semester['skip_dates']:
+                    week_timetable['timetable'][time_key][day_key] = {
+                        'disabled': True,
+                    }
+                    continue
 
                 for schedule in bookings:
                     start_time = schedule['start_datetime'].time().hour
@@ -675,7 +687,7 @@ def find_studyplan():
                 if len(slots) < week_timetable['dates'][day]['colspan']:
                     for _ in range(week_timetable['dates'][day]['colspan'] - len(slots)):
                         slots.append({})
-                        
+
         return week_timetable
     
     # Generate timetables for the entire semester

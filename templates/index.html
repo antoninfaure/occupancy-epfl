@@ -103,7 +103,7 @@
                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                             <span class="visually-hidden">Previous</span>
                         </button>
-                        <div class="carousel-inner">
+                        <div id="selectable-area" class="carousel-inner">
                             {% for timetable in timetables %}
                             <div class="carousel-item {{ 'active' if loop.index == 1 }}">
                                 <div class="table-responsive w-100">
@@ -278,7 +278,8 @@
     });
 
     new bootstrap.Carousel(document.getElementById('timetablesCarousel'), {
-        wrap: false
+        wrap: false,
+        touch: false
     })
 
     document.getElementById('timetablesCarousel').addEventListener('slid.bs.carousel', function (event) {
@@ -296,7 +297,7 @@
 
     const ds = new DragSelect({
         selectables: document.querySelectorAll('.selectable'),
-        area: document.getElementById('timetablesCarousel'),
+        area: document.getElementById('selectable-area'),
         draggability: false,
         multiSelectMode: true
     });
