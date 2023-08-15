@@ -64,9 +64,9 @@
                         aria-selected="false">Courses</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans-tab-panel"
-                        type="button" role="tab" aria-controls="plans-tab-panel"
-                        aria-selected="false">Studyplans</button>
+                    <button class="nav-link" id="studyplans-tab" data-bs-toggle="tab"
+                        data-bs-target="#studyplans-tab-panel" type="button" role="tab"
+                        aria-controls="studyplans-tab-panel" aria-selected="false">Studyplans</button>
                 </li>
             </ul>
         </header>
@@ -207,8 +207,8 @@
                         </table>
                     </div>
                 </div>
-                <div class="tab-pane fade p-0 px-5" id="plans-tab-panel" role="tabpanel" aria-labelledby="plans-tab"
-                    tabindex="0">
+                <div class="tab-pane fade p-0 px-5" id="studyplans-tab-panel" role="tabpanel"
+                    aria-labelledby="studyplans-tab" tabindex="0">
                     <div class="table-responsive">
                         <table id="plans_table" class="display" style="width:100%">
                             <thead>
@@ -222,7 +222,8 @@
                             <tbody>
                                 {% for studyplan in studyplans %}
                                 <tr>
-                                    <td><a href="/find_studyplan?studyplan={{studyplan._id}}">{{ studyplan.unit[0].name }}</a></td>
+                                    <td><a href="/find_studyplan?studyplan={{studyplan._id}}">{{ studyplan.unit[0].name
+                                            }}</a></td>
                                     <td>{{ studyplan.unit[0].section }}</td>
                                     <td>{{ studyplan.unit[0].promo }}</td>
                                     <td>
@@ -355,7 +356,7 @@
     function resetFind() {
         ds.clearSelection()
         $('#available_rooms_table').DataTable().destroy()
-        $("#available_rooms_table").empty()
+        $("#available_rooms_table tbody").empty()
     }
 </script>
 
