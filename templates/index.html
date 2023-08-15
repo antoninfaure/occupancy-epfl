@@ -39,7 +39,8 @@
                 <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
                     <form action="/room" method="get">
                         <div class="input-group justify-content-center">
-                            <input type="text" autofocus class="form-control" name="name" placeholder="room name... (ex: CE13)">
+                            <input type="text" autofocus class="form-control" name="name"
+                                placeholder="room name... (ex: CE13)">
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-danger">Search</button>
                             </div>
@@ -51,7 +52,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="find-tab" data-bs-toggle="tab" data-bs-target="#find-tab-panel"
                         type="button" role="tab" aria-controls="find-tab-panel" aria-selected="true">Available rooms
-                        </button>
+                    </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="rooms-tab" data-bs-toggle="tab" data-bs-target="#rooms-tab-panel"
@@ -59,14 +60,14 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-tab-panel"
-                        type="button" role="tab" aria-controls="courses-tab-panel" aria-selected="false">Courses</button>
+                        type="button" role="tab" aria-controls="courses-tab-panel"
+                        aria-selected="false">Courses</button>
                 </li>
-                <!--
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="plans-tab" data-bs-toggle="tab" data-bs-target="#plans-tab-panel"
                         type="button" role="tab" aria-controls="plans-tab-panel"
-                        aria-selected="false">Semestres</button>
-                </li>-->
+                        aria-selected="false">Studyplans</button>
+                </li>
             </ul>
         </header>
 
@@ -125,8 +126,9 @@
                                             <tr>
                                                 <td>{{time}}</td>
                                                 {% for day, col in row.items() %}
-                                                <td class="{{ 'selectable' if not col.disabled else 'disabled' }}" data-day="{{day}}"
-                                                    data-time="{{time}}" data-date="{{col.date}}"></td>
+                                                <td class="{{ 'selectable' if not col.disabled else 'disabled' }}"
+                                                    data-day="{{day}}" data-time="{{time}}" data-date="{{col.date}}">
+                                                </td>
                                                 {% endfor %}
                                             </tr>
                                             {% endfor %}
@@ -187,15 +189,17 @@
                                     <td><a href="/course?code={{course.code}}">{{ course.name }}</a></td>
                                     <td>{{ course.code }}</td>
                                     <td>{{ course.credits }}</td>
-                                    <td class="d-flex gap-3 align-items-center">
-                                        {% if course.semester %}
-                                        <span>{{ course.semester.name }}</span>
-                                        {% if course.semester.type == "fall" %}
-                                        <span class="badge bg-primary text-white">Fall</span>
-                                        {% else %}
-                                        <span class="badge bg-danger text-white">Spring</span>
-                                        {% endif %}
-                                        {% endif %}
+                                    <td>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            {% if course.semester %}
+                                            <span>{{ course.semester.name }}</span>
+                                            {% if course.semester.type == "fall" %}
+                                            <span class="badge bg-primary text-white">Fall</span>
+                                            {% else %}
+                                            <span class="badge bg-danger text-white">Spring</span>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -203,35 +207,40 @@
                         </table>
                     </div>
                 </div>
-                <!--
                 <div class="tab-pane fade p-0 px-5" id="plans-tab-panel" role="tabpanel" aria-labelledby="plans-tab"
                     tabindex="0">
                     <div class="table-responsive">
                         <table id="plans_table" class="display" style="width:100%">
                             <thead>
                                 <tr>
-                                    <th>Nom</th>
+                                    <th>Name</th>
                                     <th>Section</th>
-                                    <th>Semestre</th>
-                                    <th>Année</th>
-                                    <th></th>
+                                    <th>Promotion</th>
+                                    <th>Semester</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for studyplan in studyplans %}
                                 <tr>
-                                    <td>{{ studyplan.unit[0].name }}</td>
+                                    <td><a href="/find_studyplan?studyplan={{studyplan._id}}">{{ studyplan.unit[0].name }}</a></td>
                                     <td>{{ studyplan.unit[0].section }}</td>
                                     <td>{{ studyplan.unit[0].promo }}</td>
-                                    <td>{{ studyplan.semester[0].name }}</td>
-                                    <td><a class="btn btn-danger w-100"
-                                            href="/find_studyplan?studyplan={{studyplan._id}}">Voir</a></td>
+                                    <td>
+                                        <div class="d-flex gap-3 align-items-center">
+                                            {{ studyplan.semester[0].name }}
+                                            {% if studyplan.semester[0].type == "fall" %}
+                                            <span class="badge bg-primary text-white">Fall</span>
+                                            {% else %}
+                                            <span class="badge bg-danger text-white">Spring</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
-                </div>-->
+                </div>
             </div>
         </div>
 

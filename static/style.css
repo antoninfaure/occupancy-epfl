@@ -41,6 +41,16 @@ h2 {
     color: white !important;
 }
 
+td.taken div .rooms {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
 .projet {
     background-color: #8e0000 !important;
 }
@@ -52,6 +62,7 @@ h2 {
 .exercice {
     background-color: #b51f1f !important;
 }
+
 
 /* Select timetable */
 .ds-selected {

@@ -39,7 +39,8 @@
             <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
                 <form action="/room" method="get">
                     <div class="input-group justify-content-center">
-                        <input type="text" autofocus class="form-control" name="name" placeholder="room name... (ex: CE13)">
+                        <input type="text" autofocus class="form-control" name="name"
+                            placeholder="room name... (ex: CE13)">
                         <div class="input-group-append">
                             <button type="submit" class="btn btn-danger">Search</button>
                         </div>
@@ -92,12 +93,12 @@
                                         <thead>
                                             <tr>
                                                 <td></td>
-                                                {% for day in ['Lu', 'Ma', 'Me', 'Je', 'Ve'] %}
-                                                <td>
+                                                {% for day in timetable['dates'].keys() %}
+                                                <td colspan="{{ timetable['dates'][day].colspan }}">
                                                     <div class="day-title">
                                                         <span>{{ day }}</span>
                                                         {% if timetable['dates'][day] %}
-                                                        <span>{{ timetable['dates'][day] }}</span>
+                                                        <span>{{ timetable['dates'][day].date_name }}</span>
                                                         {% endif %}
                                                     </div>
                                                 </td>
@@ -111,20 +112,29 @@
                                                 {% for day, cells in row.items() %}
                                                 {% for cell in cells %}
                                                 {% if not cell.skip %}
-
-                                                {# Calculate colspan for concurrent courses and rowspan for continuous
-                                                schedules #}
-                                                <td class="{{ cell.label }}" colspan="{{ cell.colspan|default(1) }}"
+                                                {% if not cell.label %}
+                                                <td class="empty"></td>
+                                                {% else %}
+                                                <td class="taken {{ cell.label }} text-center align-middle" colspan="{{ cell.colspan|default(1) }}"
                                                     rowspan="{{ cell.rowspan|default(1) }}">
-
-                                                    {{ cell.course.code }} - {{ cell.course.name }}
-                                                    {% if cell.room %}
-                                                    <a class="btn btn-sm btn-outline-light" data-bs-toggle="tooltip"
-                                                        data-bs-placement="top" title="{{ cell.room.name }}" href="/room?name={{cell.room.name}}">
-                                                        {{ cell.room.name }}
-                                                    </a>
-                                                    {% endif %}
+                                                    <div>
+                                                        <a href="/course?code={{cell.course.code}}">{{
+                                                            cell.course.code
+                                                            }} - {{ cell.course.name }}</a>
+                                                        {% if cell.rooms %}
+                                                        <div class="rooms">
+                                                            {% for room in cell.rooms %}
+                                                            <a class="btn btn-sm btn-light"
+                                                                data-bs-toggle="tooltip" data-bs-placement="top"
+                                                                title="{{ room }}" href="/room?name={{room}}">
+                                                                {{ room }}
+                                                            </a>
+                                                            {% endfor %}
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
                                                 </td>
+                                                {% endif %}
                                                 {% endif %}
                                                 {% endfor %}
                                                 {% endfor %}
@@ -165,6 +175,25 @@
         </footer>
     </div>
 </body>
+
+<script>
+    new bootstrap.Carousel(document.getElementById('timetablesCarousel'), {
+        wrap: false
+    })
+
+    document.getElementById('timetablesCarousel').addEventListener('slid.bs.carousel', function (event) {
+        var $this = $(this);
+
+        $this.children('.carousel-control').removeAttr('disabled');
+
+        if ($('.carousel-inner .carousel-item:first').hasClass('active')) {
+            $this.children('.left.carousel-control').attr('disabled', true);
+        } else if ($('.carousel-inner .carousel-item:last').hasClass('active')) {
+            $this.children('.right.carousel-control').attr('disabled', true);
+        }
+
+    });
+</script>
 
 <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='style.css') }}">
 
