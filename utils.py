@@ -61,6 +61,7 @@ def parseCourse(url):
     teachers = [(x.text, x.get('href')) for x in soup.find('div', class_="course-summary").findAll('p')[1].findAll('a')]
 
     semester = soup.find('div', class_="study-plans").findAll('div', class_="collapse-item")[0].findAll('li')[0].text.split(':')[1].strip()
+
     if (semester != 'Printemps' and semester != 'Automne'):
         semester = None
         schedule = parseScheduleEcoleDoctorale(soup)

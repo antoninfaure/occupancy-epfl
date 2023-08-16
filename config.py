@@ -88,7 +88,7 @@ MAP_SECTIONS = {
     'Science et ingénierie computationnelles': 'MA',
     'Science et ingénierie quantiques': 'SIQ',
     'Systèmes de communication - master': 'SC',
-
+    'Programme Sciences humaines et sociales': 'SHS',
  }
 
 MAP_SEMESTERS = {

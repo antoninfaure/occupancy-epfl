@@ -365,7 +365,8 @@ def find_free_rooms():
 @app.route('/course', methods=['GET'])
 def find_course():
     code = request.args.get('code')
-    course = list(db.courses.find({ 'code' : code, 'available': True}))[0]
+    course = db.courses.find_one({ 'code' : code, 'available': True})
+
     if (course == None):
         return abort(404)
     
