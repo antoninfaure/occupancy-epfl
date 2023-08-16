@@ -15,7 +15,7 @@ def getAllCoursesUrl():
     promos = [card.find('a').get('href') for card in cards]
     courses_url = []
     courses_names = []
-    for promo in promos:
+    for promo in tqdm(promos):
         page = requests.get(URL_ROOT + promo)
         soup = BeautifulSoup(page.content, "html.parser")
         sections = [x.get('href') for x in soup.find('main').find('ul').findAll('a')]
@@ -64,8 +64,10 @@ def parseCourse(url):
     if (semester != 'Printemps' and semester != 'Automne'):
         semester = None
         schedule = parseScheduleEcoleDoctorale(soup)
-        if schedule == None:
-            print(f'\033[91m NO SCHEDULE ({url}) \033[0m')
+        if schedule != None:
+            semester = 'ecole_doctorale'
+        #if schedule == None:
+            #print(f'\033[91m NO SCHEDULE ({url}) \033[0m')
     else:
         schedule = parseSchedule(soup)
     
@@ -97,21 +99,16 @@ def parseScheduleEcoleDoctorale(soup):
         if (i == 0):
             continue
         if (row.find('th') != None):
-            day = row.find('th').text.split('\xa0')[0][:2]
-            if ('2023' not in row.find('th').text.split('\xa0')[1]):
-                year = row.find('th').text.split('\xa0')[1]
-                #print(f'\033[91m SKIP (not 2023 -> {year}) \033[0m')
-                day = None
-                continue
-            if (int(row.find('th').text.split('\xa0')[1].split('.')[1]) > 5):
-                year = row.find('th').text.split('\xa0')[1]
-                #print(f'\033[91m SKIP (during summer -> {year}) \033[0m')
-                day = None
-                continue
-        elif (row.get("class") != None and 'grisleger' in row.get("class") and day != None):
+            # find a dd.mm.yyyy date
+            date = re.findall(r'\d{2}.\d{2}.\d{4}', row.find('th').text)
+            if (len(date) > 0):
+                date = datetime.strptime(date[0], '%d.%m.%Y')
+        elif (row.get("class") != None and 'grisleger' in row.get("class") and date != None):
             time = [x.split(':')[0] for x in row.findAll('td')[0].text.split('-')]
+            
+            start_hour = int(time[0])
             duration = int(time[1]) - int(time[0])
-            time = f"{int(time[0])}-{int(time[0]) + 1}"
+        
             rooms_found = [room.text for room in row.findAll('td')[1].findAll('a')]
             rooms = []
             for room in rooms_found:
@@ -132,33 +129,30 @@ def parseScheduleEcoleDoctorale(soup):
             else:
                 print(label)
             creneau = {
-                'day': day,
-                'time': time,
+                'start_hour': start_hour,
+                'duration': duration,
                 'label': label,
                 'rooms': rooms,
-                'duration': duration
+                'date': date
             }
             if (len(rooms) > 0):
                 creneaux.append(creneau)
             creneau = {}
+
     if len(creneaux) == 0:
         #print(f'\033[91m SKIP (no creneaux) \033[0m')
         return None
+    
+    schedule = []
     for creneau in creneaux:
-        day = creneau['day']
-        time = creneau['time']
-        if (time not in schedule):
-            schedule[time] = dict()
-        if (day not in schedule[time]):
-            schedule[time][day] = {
-                'duration': creneau['duration'],
-                'rooms': creneau['rooms'],
-                'label': creneau['label']
-            }
-        elif (schedule[time][day]['duration'] == creneau['duration']):
-            old_rooms = schedule[time][day]['rooms']
-            new_rooms = creneau['rooms']
-            schedule[time][day]['rooms'] = list(set(old_rooms + new_rooms))
+        found = False
+        for i, s in enumerate(schedule):
+            if (s['start_hour'] == creneau['start_hour'] and s['duration'] == creneau['duration'] and s['label'] == creneau['label']):
+                schedule[i]['rooms'] = schedule[i]['rooms'] + creneau['rooms']
+                found = True
+                break
+        if (not found):
+            schedule.append(creneau)    
 
     return schedule
 
@@ -429,77 +423,86 @@ def list_course_schedules(db, course):
     if (semester_type == "Automne"):
         semester_type = "fall"
     elif (semester_type == "Printemps"):
-        semester_type = "spring"
-    else:
-        print("Invalid semester type")
-        return []
-    
-    semester = db.semesters.find_one({"type": semester_type})
-    if (semester is None):
-        print("Semester not found in db")
-        return []
-
-    semester_start = semester.get("start_date")
-    semester_end = semester.get("end_date")
+        semester_type = "spring"    
 
     # Get course schedule
     course_schedule = course.get("schedule")
 
-    # Get course rooms
-    rooms = get_course_rooms(db, course)
-
-    map_rooms = {}
-    for room in rooms:
-        map_rooms[room.get("name")] = room['_id']
-
-        
-
-    # Map from number to day of the week
-    map_days = {
-        0: 'Lu',
-        1: 'Ma',
-        2: 'Me',
-        3: 'Je',
-        4: 'Ve'
-    }
-
-    schedules = []
-
     if (course_schedule is None):
         return []
+    
+    if (semester_type == "ecole_doctorale"):
+        schedules = []
 
-    # Loop through every date in the semester
-    current_date = semester_start
-    while current_date <= semester_end:
-        weekday = current_date.weekday()
-
-        # If it's not a weekday (Saturday or Sunday), skip
-        if weekday not in map_days:
-            current_date += timedelta(days=1)
-            continue
-
-        day_abbr = map_days[current_date.weekday()]
-        
         # Loop through the course schedule for that day
-        for time, time_schedule in course_schedule.items():
-            if day_abbr in time_schedule:
-                entry = time_schedule[day_abbr]
-                
-                # If it's not a 'skip' entry, create a booking
-                if not entry.get('skip') or entry.get('skip') == False:
-                    start_hour = int(time.split('-')[0])
-                    duration = entry.get('duration', 1)  # default to 1 hour if not specified
-                    schedule = {
-                        'course_id': db_course.get('_id'),
-                        'start_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour),
-                        'end_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour + duration),
-                        'label': entry['label'],
-                        'available': True,
-                        'rooms': entry['rooms']
-                    }
-                    schedules.append(schedule)
+        for schedule in course_schedule:
+
+            date = schedule.get('date')
+            start_hour = schedule.get('start_hour')
+            duration = schedule.get('duration', 1)  # default to 1 hour if not specified
+
+            schedule = {
+                'course_id': db_course.get('_id'),
+                'start_datetime': datetime.combine(date, datetime.min.time()).replace(hour=start_hour),
+                'end_datetime': datetime.combine(date, datetime.min.time()).replace(hour=start_hour + duration),
+                'label': schedule.get('label'),
+                'available': True,
+                'rooms': schedule.get('rooms')
+            }
+            schedules.append(schedule)
+        return schedules
+    else:
+        # Map from number to day of the week
+        map_days = {
+            0: 'Lu',
+            1: 'Ma',
+            2: 'Me',
+            3: 'Je',
+            4: 'Ve'
+        }
         
-        current_date += timedelta(days=1)
+        semester = db.semesters.find_one({"type": semester_type})
+        if (semester is None):
+            print("Semester not found in db")
+            return []
+
+        semester_start = semester.get("start_date")
+        semester_end = semester.get("end_date")
+
+        schedules = []
+        
+        # Loop through every date in the semester
+        current_date = semester_start
+        while current_date <= semester_end:
+            weekday = current_date.weekday()
+
+            # If it's not a weekday (Saturday or Sunday), skip
+            if weekday not in map_days:
+                current_date += timedelta(days=1)
+                continue
+
+            day_abbr = map_days[current_date.weekday()]
+            
+            # Loop through the course schedule for that day
+            for time, time_schedule in course_schedule.items():
+                if day_abbr in time_schedule:
+                    entry = time_schedule[day_abbr]
+                    
+                    # If it's not a 'skip' entry, create a booking
+                    if not entry.get('skip') or entry.get('skip') == False:
+                        start_hour = int(time.split('-')[0])
+                        duration = entry.get('duration', 1)  # default to 1 hour if not specified
+                        schedule = {
+                            'course_id': db_course.get('_id'),
+                            'start_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour),
+                            'end_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour + duration),
+                            'label': entry['label'],
+                            'available': True,
+                            'rooms': entry['rooms']
+                        }
+                        schedules.append(schedule)
+            
+            current_date += timedelta(days=1)
 
     return schedules
 
@@ -613,26 +616,25 @@ def create_course_bookings(db, course):
 
     new_bookings = []
     for schedule in schedules:
-        schedule_id = None
+        db_schedule_found = None
         for db_schedule in db_schedules:
             if (
                 schedule.get('course_id') == db_schedule.get('course_id') and
                 schedule.get('start_datetime') == db_schedule.get('start_datetime') and
                 schedule.get('end_datetime') == db_schedule.get('end_datetime')):
-                schedule_id = db_schedule.get('_id')
+                db_schedule_found = db_schedule
                 break
         
-        if schedule_id is None:
+        if db_schedule_found is None:
             print("Schedule not found in db")
             continue
 
-        for room_name in schedule.get('rooms'):
+        unique_rooms = list(set(schedule.get('rooms')))
+
+        for room_name in unique_rooms:
             found = False
-            for db_room in db_schedule.get('rooms'):
+            for db_room in db_schedule_found.get('rooms'):
                 if (
-                    schedule.get('course_id') == db_schedule.get('course_id') and
-                    schedule.get('start_datetime') == db_schedule.get('start_datetime') and
-                    schedule.get('end_datetime') == db_schedule.get('end_datetime') and
                     room_name == db_room.get('name')):
                     found = True
                     break
@@ -643,7 +645,7 @@ def create_course_bookings(db, course):
                     print("Room not found in db")
                     continue
                 new_booking = {
-                    "schedule_id": schedule_id,
+                    "schedule_id": db_schedule_found.get("_id"),
                     "room_id": room.get("_id"),
                     "available": True
                 }

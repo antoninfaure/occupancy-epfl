@@ -93,10 +93,54 @@ def home():
             }
         }
     ]))
+    
+    courses_with_studyplan_ids = [course['_id'] for course in courses]
+
+    course_without_studyplan_with_schedules = list(db.schedules.aggregate([
+        {
+            "$match": {
+                "available": True,
+                "course_id": { "$nin": courses_with_studyplan_ids }
+            }
+        },
+        {
+            "$lookup": {
+                "from": "courses",
+                "localField": "course_id",
+                "foreignField": "_id",
+                "as": "courseDetails"
+            }
+        },
+        {
+            "$unwind": "$courseDetails"
+        },
+        {
+            "$group": {
+                "_id": "$course_id",
+                "name": { "$first": "$courseDetails.name" },
+                "code": { "$first": "$courseDetails.code" },
+                "credits": { "$first": "$courseDetails.credits" },
+                "edu_url": { "$first": "$courseDetails.edu_url" }
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "course_id": "$_id",
+                "name": 1,
+                "code": 1,
+                "credits": 1,
+                "edu_url": 1
+            }
+        }
+    ]))
+
+    courses.extend(course_without_studyplan_with_schedules)
 
     # Create a basic timetable structure
-    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
+    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6:'Sunday'}
     times = range(8, 20)
+    week_length = 7
     timetable_template = dict()
     timetable_template['timetable'] = dict()
     timetable_template['dates'] = dict()
@@ -119,7 +163,7 @@ def home():
     week_start = week_start_date
     while week_start < end_date:
         week_timetable = deepcopy(timetable_template)
-        for day_offset in range(5):  # We are considering a 5-day week
+        for day_offset in range(week_length): 
             current_date = week_start + timedelta(days=day_offset)
             week_timetable['dates'][days_mapping[current_date.weekday()]] = {
                 'date_name': current_date.strftime('%d/%m/%Y')
@@ -366,16 +410,12 @@ def find_course():
             "$limit": 1
         }
     ]))
-
-    if (semester == None or len(semester) == 0):
-        return redirect(url_for('home'))
     
-    semester = semester[0]['semester']
-
-    if (semester == None):
-        return redirect(url_for('home'))
-    
-    course['semester'] = semester
+    if semester != None and len(semester) > 0:
+        semester = semester[0]['semester']
+        course['semester'] = semester
+    else:
+        semester = None
 
     # list teachers
     teachers = list(db.teach_in.aggregate([
@@ -458,20 +498,32 @@ def find_course():
     ]))
   
     # Create a basic timetable structure
-    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
+    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5:'Saturday', 6:'Sunday'}
     times = range(8, 20)
     timetable_template = dict()
     timetable_template['timetable'] = dict()
     timetable_template['dates'] = dict()
 
-    for time in times:
-        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
-        for day in days_mapping.values():
-            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
 
     # Generate timetables for the semester
-    start_date = semester['start_date'].date()
-    end_date = semester['end_date'].date()
+    if (semester == None):
+        start_date = datetime.now().date()
+        if len(schedules) > 0:
+            end_date = max([schedule['end_datetime'] for schedule in schedules]).date()
+        else:
+            end_date = start_date
+        week_length = 7
+    else:
+        start_date = semester['start_date'].date()
+        end_date = semester['end_date'].date()
+        week_length = 5
+
+    for time in times:
+        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
+        for i in range(week_length):
+            day = days_mapping[i]
+            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
+
     timetables = []
 
     week_start_date = start_date - timedelta(days=start_date.weekday())
@@ -479,7 +531,7 @@ def find_course():
 
     while week_start <= end_date:
         week_timetable = deepcopy(timetable_template)
-        for day_offset in range(5):  # 5-day week
+        for day_offset in range(week_length):  # 5-day week
             current_date = week_start + timedelta(days=day_offset)
             week_timetable['dates'][days_mapping[current_date.weekday()]] = {
                 'date_name': current_date.strftime('%d/%m/%Y')
@@ -493,12 +545,13 @@ def find_course():
                         'disabled': True,
                     }
                     continue
-
-                if 'skip_dates' in semester and current_date in semester['skip_dates']:
-                    week_timetable['timetable'][time_key][day_key] = {
-                        'disabled': True,
-                    }
-                    continue
+                
+                if semester != None:
+                    if 'skip_dates' in semester and current_date in semester['skip_dates']:
+                        week_timetable['timetable'][time_key][day_key] = {
+                            'disabled': True,
+                        }
+                        continue
 
                 for schedule in schedules:
                     start_time = schedule['start_datetime'].time().hour
