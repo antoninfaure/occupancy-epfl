@@ -47,8 +47,8 @@ MAP_PROMOS = {
     'Master 2' : 'MA2',
     'Master 3' : 'MA3',
     'Master 4' : 'MA4',
-    'PDM Printemps' : 'PMH',
-    'PDM Automne' : 'PME',
+    'PDM Printemps' : 'PME',
+    'PDM Automne' : 'PMH',
 }
 
 MAP_SECTIONS = {

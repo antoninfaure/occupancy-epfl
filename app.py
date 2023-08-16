@@ -23,7 +23,6 @@ def inject_now():
 
 @app.route('/', methods=['GET'])
 def home():
-
     # List all rooms
     rooms = db.rooms.find({ "available": True })
 
@@ -111,7 +110,7 @@ def home():
     semester = db.semesters.find_one({ "available": True }, sort=[("end_date", 1)])
     
     # Generate timetables for the next semester
-    start_date = datetime.now().date()
+    start_date = (datetime.now() + timedelta(hours=2)).date()
     end_date = semester['end_date'].date()
 
     timetables = []
@@ -125,6 +124,7 @@ def home():
             week_timetable['dates'][days_mapping[current_date.weekday()]] = {
                 'date_name': current_date.strftime('%d/%m/%Y')
             }
+
             disabled = current_date < start_date
             for time in times:
                 week_timetable['timetable'][f'{time}-{time+1}'][days_mapping[current_date.weekday()]] = {
