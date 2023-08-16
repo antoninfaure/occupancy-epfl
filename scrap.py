@@ -58,8 +58,8 @@ create_rooms(db, courses)
 ### -- Create all teachers -- ###
 create_teachers(db, courses)
 
-### -- Create all bookings -- ###
-create_courses_bookings(db, courses)
+### -- Create all bookings and schedules -- ###
+create_courses_schedules_and_bookings(db, courses)
 
 ### -- Create all teach_in -- ###
 create_teach_in(db, courses)

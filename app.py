@@ -201,10 +201,14 @@ def room():
 
 
     try:
-        pipeline = [
+        room_bookings = list(db.bookings.find({
+            'room_id': room['_id'],
+        }))
+
+        schedules = list(db.schedules.aggregate([
             {
                 "$match": {
-                    'room_id': room['_id'],
+                    '_id': { '$in': [ObjectId(booking['schedule_id']) for booking in room_bookings] },
                     'start_datetime': { '$gte': start_datetime },
                     'end_datetime': { '$lte': end_datetime }
                 }
@@ -217,9 +221,8 @@ def room():
                     "as": "course"
                 }
             }
-        ]
+        ]))
 
-        schedules = list(db.booking.aggregate(pipeline))
     except Exception as e:
         print(e)
 
@@ -299,9 +302,13 @@ def find_free_rooms():
         rooms_names = [{'name': x['name'], 'type': x['type']} for x in free_rooms]
         return rooms_names
     
-    # Find all booked rooms
-    booked_rooms = db.booking.find({"$or": query_conditions})
-    booked_room_ids = [room["room_id"] for room in booked_rooms]
+    # Find all schedules that are during the datetime ranges
+    constraining_schedule = list(db.schedules.find({"$or": query_conditions}))
+    constraining_schedule_ids = [schedule["_id"] for schedule in constraining_schedule]
+
+    # Find all rooms that are booked for these schedules
+    booked_rooms = db.bookings.find({"schedule_id": {"$in": constraining_schedule_ids}})
+    booked_room_ids = [booking["room_id"] for booking in booked_rooms]
 
     # Find available rooms that are not in booked_room_ids
     free_rooms = list(db.rooms.find({"available": True, "_id": {"$nin": booked_room_ids}}))
@@ -399,26 +406,57 @@ def find_course():
 
     course['teachers'] = [teacher['teacher'] for teacher in teachers if teacher != None]
 
-    bookings = list(db.booking.aggregate([
-        {
-            "$match": {
-                'course_id': course['_id'],
-                'available': True
+    schedules = list(db.schedules.aggregate([
+            {
+                "$match": {
+                    'course_id': course['_id'],
+                    'available': True
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "bookings",
+                    "localField": "_id",
+                    "foreignField": "schedule_id",
+                    "as": "bookings"
+                }
+            },
+            {
+                "$unwind": "$bookings"
+            },
+            {
+                "$lookup": {
+                    "from": "rooms",
+                    "localField": "bookings.room_id",
+                    "foreignField": "_id",
+                    "as": "room"
+                }
+            },
+            {
+                "$unwind": "$room"
+            }, 
+            {
+            "$group": {
+                "_id": "$_id",
+                "rooms": {"$push": "$room.name"},
+                "originalDoc": {"$first": "$$ROOT"}
             }
         },
         {
-            "$lookup": {
-                "from": "rooms",
-                "localField": "room_id",
-                "foreignField": "_id",
-                "as": "room"
+            "$replaceRoot": {
+                "newRoot": {
+                    "$mergeObjects": ["$originalDoc", {"rooms": "$rooms"}] 
+                }
             }
         },
         {
-            "$unwind": "$room"
+            "$project": {
+                "bookings": 0,
+                "room": 0
+            }
         }
     ]))
-    
+  
     # Create a basic timetable structure
     days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
     times = range(8, 20)
@@ -462,22 +500,18 @@ def find_course():
                     }
                     continue
 
-                for schedule in bookings:
+                for schedule in schedules:
                     start_time = schedule['start_datetime'].time().hour
                     end_time = schedule['end_datetime'].time().hour
                                 
                     # Check if the schedule corresponds to the current time and day
                     if (schedule['start_datetime'].date() == current_date and start_time == time):
                         duration = end_time - start_time
-                        if 'rooms' not in week_timetable['timetable'][time_key][day_key]:
-                            week_timetable['timetable'][time_key][day_key].update({
-                                'label': schedule['label'],
-                                'duration': duration,
-                                'rooms': [schedule['room']['name']]  # initiate with a list containing the current room name
-                            })
-                        else:
-                            # append the room name if there is already an entry for this time slot and day
-                            week_timetable['timetable'][time_key][day_key]['rooms'].append(schedule['room']['name'])
+                        week_timetable['timetable'][time_key][day_key] = {
+                            'label': schedule['label'],
+                            'duration': duration,
+                            'rooms': schedule['rooms']
+                        }
 
                         # Mark subsequent hours as 'skip' if the booking spans multiple hours
                         for extra_hours in range(1, duration):
@@ -571,25 +605,13 @@ def find_studyplan():
         print("semester not found")
         return abort(404)
 
-    # Find all booking
-    # Build the aggregation pipeline
-    pipeline = [
+    # Get the schedules with populated rooms and course info
+    schedules = list(db.schedules.aggregate([
         {
             "$match": {
                 'course_id': {'$in': list(map(lambda x: x['_id'], courses_in_studyplan))},
                 'available': True
             }
-        },
-        {
-            "$lookup": {
-                "from": "rooms",
-                "localField": "room_id",
-                "foreignField": "_id",
-                "as": "room"
-            }
-        },
-        {
-            "$unwind": "$room"
         },
         {
             "$lookup": {
@@ -601,13 +623,58 @@ def find_studyplan():
         },
         {
             "$unwind": "$course"
+        },
+        {
+            "$lookup": {
+                "from": "bookings",
+                "localField": "_id",
+                "foreignField": "schedule_id",
+                "as": "bookings"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$bookings",
+                "preserveNullAndEmptyArrays": True  # This keeps schedules that might not have bookings
+            }
+        },
+        {
+            "$lookup": {
+                "from": "rooms",
+                "localField": "bookings.room_id",
+                "foreignField": "_id",
+                "as": "room"
+            }
+        },
+        {
+            "$unwind": {
+                "path": "$room",
+                "preserveNullAndEmptyArrays": True  # This keeps schedules/bookings that might not have rooms
+            }
+        },
+        {
+            "$group": {
+                "_id": "$_id",
+                "rooms": {"$push": "$room.name"},  # Assuming room has a "name" field
+                "originalDoc": {"$first": "$$ROOT"}  # Preserve the schedule document with course details
+            }
+        },
+        {
+            "$replaceRoot": {
+                "newRoot": {
+                    "$mergeObjects": ["$originalDoc", {"rooms": "$rooms"}]  # Merge the original document with rooms field
+                }
+            }
+        },
+        {
+            "$project": {
+                "bookings": 0,  # Exclude bookings field
+                "room": 0      # Exclude room temporary field
+            }
         }
-    ]
+    ]))
 
-    # Get the bookings with populated room and course info
-    bookings = list(db.booking.aggregate(pipeline))
-
-    def generate_week_timetable(week_start, all_bookings):
+    def generate_week_timetable(week_start, all_schedules):
         days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
         times = range(8, 20)
 
@@ -628,26 +695,17 @@ def find_studyplan():
                 'date_name': current_date.strftime('%d/%m/%Y')
             }
 
-            # Filter bookings that are relevant to the current day and group them by (course, start hour, end hour)
-            bookings_at_this_day = [b for b in all_bookings if b['start_datetime'].date() == current_date]
-
-            # Group bookings by course, start hour, end hour
-            grouped_bookings = dict()
-            for booking in bookings_at_this_day:
-                course_id = booking['course']['_id']
-                start_hour = booking['start_datetime'].hour
-                end_hour = booking['end_datetime'].hour
-                label = booking['label']
-
-                if (course_id, start_hour, end_hour, label) not in grouped_bookings:
-                    grouped_bookings[(course_id, start_hour, end_hour, label)] = []
-
-                grouped_bookings[(course_id, start_hour, end_hour, label)].append(booking)
+            # Filter schedules that are relevant to the current day and group them by (course, start hour, end hour)
+            schedules_at_this_day = [b for b in all_schedules if b['start_datetime'].date() == current_date]
 
             # For each group, add to the timetable
-            for (course_id, start_hour, end_hour, label), bookings in grouped_bookings.items():
-                rooms = set(map(lambda x: x['room']['name'], bookings))
-                course = bookings[0]['course']
+            for schedule in schedules_at_this_day:
+                course = schedule['course']
+                rooms = schedule['rooms']
+                label = schedule['label']
+
+                start_hour = schedule['start_datetime'].hour
+                end_hour = schedule['end_datetime'].hour
                 duration = end_hour - start_hour
 
                 week_timetable['timetable'][f'{start_hour}-{start_hour+1}'][current_day].append({
@@ -697,13 +755,13 @@ def find_studyplan():
 
     week_start = start_date - timedelta(days=start_date.weekday())
     while week_start < end_date:
-        week_timetable = generate_week_timetable(week_start, bookings)
+        week_timetable = generate_week_timetable(week_start, schedules)
         timetables.append(week_timetable)
         
         week_start = week_start + timedelta(days=7)
 
 
-    return render_template('semester.html', studyplan=studyplan, timetables=timetables)
+    return render_template('semester.html', studyplan=studyplan, timetables=timetables, courses=courses_in_studyplan)
 
     
 

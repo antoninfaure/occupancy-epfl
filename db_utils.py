@@ -52,15 +52,27 @@ def init(db):
         except Exception as e:
             print(e)
         
-    def init_booking_collection():
+    def init_bookings_collection():
         try:
-            db.create_collection("booking")
+            db.create_collection("bookings")
         except Exception as e:
             print(e)
         
         try:
-            db.command("collMod", "booking", validator=booking_validator)
-            db.booking.create_index([("room_id", pymongo.ASCENDING), ("course_id", pymongo.ASCENDING), ("start_datetime", pymongo.ASCENDING), ("end", pymongo.ASCENDING)], name="booking_unique", unique=True)
+            db.command("collMod", "bookings", validator=booking_validator)
+            db.bookings.create_index([("schedule_id", pymongo.ASCENDING), ("room_id", pymongo.ASCENDING)], name="booking_unique", unique=True)
+        except Exception as e:
+            print(e)
+
+    def init_schedules_collection():
+        try:
+            db.create_collection("schedules")
+        except Exception as e:
+            print(e)
+        
+        try:
+            db.command("collMod", "schedules", validator=schedule_validator)
+            db.schedules.create_index([("course_id", pymongo.ASCENDING), ("start_datetime", pymongo.ASCENDING), ("end_datetime", pymongo.ASCENDING)], name="schedule_unique", unique=True)
         except Exception as e:
             print(e)
 
@@ -117,7 +129,8 @@ def init(db):
     init_teachers_collection()
     init_courses_collection()
     init_teach_in_collection()
-    init_booking_collection()
+    init_bookings_collection()
+    init_schedules_collection()
     init_studyplans_collection()
     init_units_collection()
     init_semesters_collection()

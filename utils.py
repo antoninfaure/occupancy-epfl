@@ -211,24 +211,23 @@ def parseSchedule(soup):
                                 elif (room not in ROOMS_FILTER):
                                     rooms.append(room)
                             
-                            # if there is a room
-                            if (len(rooms) > 0):
-                                if (time not in schedule):
-                                    schedule[time] = dict()
-                                schedule[time][day] = {
-                                    'label': label,
-                                    'duration': duration,
-                                    'rooms': rooms
-                                }
-                                # Check if there is a skip to add on the day column
-                                if (duration > 1):
-                                    for k in range(duration):
-                                        k_time = '-'.join(list(map(lambda x: str(int(x)+k), time.split('-'))))
-                                        if (k_time not in schedule):
-                                            schedule[k_time] = dict()
-                                            schedule[k_time][day] = {
-                                                'skip': True
-                                            }
+                            if (time not in schedule):
+                                schedule[time] = dict()
+                            schedule[time][day] = {
+                                'label': label,
+                                'duration': duration,
+                                'rooms': rooms
+                            }
+                            # Check if there is a skip to add on the day column
+                            if (duration > 1):
+                                for k in range(duration):
+                                    k_time = '-'.join(list(map(lambda x: str(int(x)+k), time.split('-'))))
+                                    if (k_time not in schedule):
+                                        schedule[k_time] = dict()
+                                        schedule[k_time][day] = {
+                                            'skip': True
+                                        }
+                            
     if (len(schedule.keys()) == 0):
         return None
     
@@ -406,14 +405,14 @@ def create_teach_in(db, courses):
 
     return
 
-### LIST COURSE BOOKINGS ###
-def list_course_bookings(db, course):
+### LIST COURSE SCHEDULES ###
+def list_course_schedules(db, course):
     '''
-        Get all the room bookings for a course in a semester
+        Get all the room schedules for a course in a semester
         Input:
             - course: the course object
         Output:
-            - bookings: a list of bookings
+            - schedules: a list of schedules
     '''
 
     # Get course db object
@@ -425,7 +424,6 @@ def list_course_bookings(db, course):
     # Get semester
     semester_type = course.get("semester")
     if (semester_type is None):
-        print("Course has no semester type")
         return []
     
     if (semester_type == "Automne"):
@@ -450,9 +448,6 @@ def list_course_bookings(db, course):
     # Get course rooms
     rooms = get_course_rooms(db, course)
 
-    if (rooms is None or len(rooms) == 0):
-        return []
-
     map_rooms = {}
     for room in rooms:
         map_rooms[room.get("name")] = room['_id']
@@ -468,11 +463,10 @@ def list_course_bookings(db, course):
         4: 'Ve'
     }
 
-    bookings = []
+    schedules = []
 
     if (course_schedule is None):
         return []
-        
 
     # Loop through every date in the semester
     current_date = semester_start
@@ -495,28 +489,24 @@ def list_course_bookings(db, course):
                 if not entry.get('skip') or entry.get('skip') == False:
                     start_hour = int(time.split('-')[0])
                     duration = entry.get('duration', 1)  # default to 1 hour if not specified
-                    for room in entry['rooms']:
-                        if room not in map_rooms:
-                            print("Room not found in db")
-                            continue
-                        booking = {
-                            'room_id': map_rooms[room],
-                            'course_id': db_course.get('_id'),
-                            'start_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour),
-                            'end_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour + duration),
-                            'label': entry['label'],
-                            'available': True
-                        }
-                        bookings.append(booking)
+                    schedule = {
+                        'course_id': db_course.get('_id'),
+                        'start_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour),
+                        'end_datetime': datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour + duration),
+                        'label': entry['label'],
+                        'available': True,
+                        'rooms': entry['rooms']
+                    }
+                    schedules.append(schedule)
         
         current_date += timedelta(days=1)
 
-    return bookings
+    return schedules
 
-### CREATE COURSE BOOKINGS ###
-def create_course_bookings(db, course):
+### CREATE COURSE SCHEDULES ###
+def create_course_schedules(db, course):
     '''
-        Create all the room bookings for a course in a semester
+        Create all the schedules for a course in a semester
         Input:
             - course: the course to create the bookings for
         Output:
@@ -525,56 +515,161 @@ def create_course_bookings(db, course):
 
     db_course = db.courses.find_one({"code": course.get("code")})
     if (db_course is None):
-        print(course)
         print("Course not found in db")
         return None
 
-    bookings = list_course_bookings(db, course)
+    schedules = list_course_schedules(db, course)
 
-    if bookings is None:
+    if schedules is None:
         return
     
-    if (len(bookings) == 0):
+    if (len(schedules) == 0):
         return
     
 
-    db_bookings = list(db.booking.find({
-        "course_id": bookings[0].get("course_id"),
+    db_schedules = list(db.schedules.find({
+        "course_id": schedules[0].get("course_id"),
     }))
 
-    new_bookings = []
-    for booking in bookings:
+    new_schedules = []
+    for schedule in schedules:
         found = False
-        for db_booking in db_bookings:
-            if (booking.get('room_id') == db_booking.get('room_id') and
-                booking.get('course_id') == db_booking.get('course_id') and
-                booking.get('start_datetime') == db_booking.get('start_datetime') and
-                booking.get('end_datetime') == db_booking.get('end_datetime')):
+        for db_schedule in db_schedules:
+            if (
+                schedule.get('course_id') == db_schedule.get('course_id') and
+                schedule.get('start_datetime') == db_schedule.get('start_datetime') and
+                schedule.get('end_datetime') == db_schedule.get('end_datetime')):
                 found = True
                 break
         if not found:
-            new_bookings.append(booking)
+            new_schedule = {
+                "course_id": schedule.get("course_id"),
+                "start_datetime": schedule.get("start_datetime"),
+                "end_datetime": schedule.get("end_datetime"),
+                "label": schedule.get("label"),
+                "available": True
+            }
+            new_schedules.append(new_schedule)
 
-    if (len(new_bookings) == 0):
+    if (len(new_schedules) == 0):
         return
     
     try:
-        db.booking.insert_many(new_bookings)
+        db.schedules.insert_many(new_schedules)
     except Exception as e:
         print(e)
 
     return
 
-def create_courses_bookings(db, courses):
+### CREATE COURSE BOOKINGS ###
+def create_course_bookings(db, course):
     '''
-        Create all the room bookings for a list of courses in a semester
+        Create all the bookings for a course in a semester
+        Input:
+            - course: the course to create the bookings for
+        Output:
+            - None
+    '''
+
+    db_course = db.courses.find_one({"code": course.get("code")})
+    if (db_course is None):
+        print("Course not found in db")
+        return None
+
+    # Get all schedules of a course and add a rooms field as a list of room names of the bookings linked to the schedule
+    db_schedules = list(db.schedules.aggregate([
+        {
+            "$match": {
+                "course_id": db_course.get("_id")
+            }
+        },
+        {
+            "$lookup": {
+                "from": "bookings",
+                "localField": "_id",
+                "foreignField": "schedule_id",
+                "as": "bookings"
+            }
+        },
+        {
+            "$lookup": {
+                "from": "rooms",
+                "localField": "bookings.room_id",
+                "foreignField": "_id",
+                "as": "rooms"
+            }
+        },
+        {
+            "$addFields": {
+                "rooms": "$rooms"
+            }
+        }
+    ]))
+
+    schedules = list_course_schedules(db, course)
+
+    if (len(schedules) == 0):
+        return
+
+    new_bookings = []
+    for schedule in schedules:
+        schedule_id = None
+        for db_schedule in db_schedules:
+            if (
+                schedule.get('course_id') == db_schedule.get('course_id') and
+                schedule.get('start_datetime') == db_schedule.get('start_datetime') and
+                schedule.get('end_datetime') == db_schedule.get('end_datetime')):
+                schedule_id = db_schedule.get('_id')
+                break
+        
+        if schedule_id is None:
+            print("Schedule not found in db")
+            continue
+
+        for room_name in schedule.get('rooms'):
+            found = False
+            for db_room in db_schedule.get('rooms'):
+                if (
+                    schedule.get('course_id') == db_schedule.get('course_id') and
+                    schedule.get('start_datetime') == db_schedule.get('start_datetime') and
+                    schedule.get('end_datetime') == db_schedule.get('end_datetime') and
+                    room_name == db_room.get('name')):
+                    found = True
+                    break
+
+            if found == False:
+                room = db.rooms.find_one({"name": room_name})
+                if (room is None):
+                    print("Room not found in db")
+                    continue
+                new_booking = {
+                    "schedule_id": schedule_id,
+                    "room_id": room.get("_id"),
+                    "available": True
+                }
+                new_bookings.append(new_booking)
+
+    if (len(new_bookings) == 0):
+        return
+    
+    try:
+        db.bookings.insert_many(new_bookings)
+    except Exception as e:
+        print(e)
+
+    return
+
+def create_courses_schedules_and_bookings(db, courses):
+    '''
+        Create all the schedules and bookings for a list of courses in a semester
         Input:
             - courses: the list of courses to create the bookings for
         Output:
             - None
     '''
 
-    for course in courses:
+    for course in tqdm(courses):
+        create_course_schedules(db, course)
         create_course_bookings(db, course)
 
     return

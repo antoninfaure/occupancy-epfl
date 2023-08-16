@@ -65,8 +65,8 @@
                         aria-selected="true">Schedule</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-tab-panel"
-                        type="button" role="tab" aria-controls="map-tab-panel" aria-selected="false">Map</button>
+                    <button class="nav-link" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses-tab-panel"
+                        type="button" role="tab" aria-controls="courses-tab-panel" aria-selected="false">Courses</button>
                 </li>
             </ul>
             <div class="tab-content" id="tabContent">
@@ -115,7 +115,8 @@
                                                 {% if not cell.label %}
                                                 <td class="empty"></td>
                                                 {% else %}
-                                                <td class="taken {{ cell.label }} text-center align-middle" colspan="{{ cell.colspan|default(1) }}"
+                                                <td class="taken {{ cell.label }} text-center align-middle"
+                                                    colspan="{{ cell.colspan|default(1) }}"
                                                     rowspan="{{ cell.rowspan|default(1) }}">
                                                     <div>
                                                         <a href="/course?code={{cell.course.code}}">{{
@@ -124,9 +125,9 @@
                                                         {% if cell.rooms %}
                                                         <div class="rooms">
                                                             {% for room in cell.rooms %}
-                                                            <a class="btn btn-sm btn-light"
-                                                                data-bs-toggle="tooltip" data-bs-placement="top"
-                                                                title="{{ room }}" href="/room?name={{room}}">
+                                                            <a class="btn btn-sm btn-light" data-bs-toggle="tooltip"
+                                                                data-bs-placement="top" title="{{ room }}"
+                                                                href="/room?name={{room}}">
                                                                 {{ room }}
                                                             </a>
                                                             {% endfor %}
@@ -161,6 +162,34 @@
                         </div>
                     </div>
                 </div>
+                <div class="tab-pane fade p-0 pb-4" id="courses-tab-panel" role="tabpanel" aria-labelledby="courses-tab"
+                    tabindex="0">
+                    <div class="table-responsive">
+                        <table id="courses_table" class="display" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Code</th>
+                                    <th>Credits</th>
+                                    <th>Link to edu.epfl.ch</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td><a href="/course?code={{course.code}}">{{ course.name }}</a></td>
+                                    <td>{{ course.code }}</td>
+                                    <td>{{ course.credits }}</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-danger" href="{{ course.edu_url }}"
+                                            target="_blank">Link</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -177,6 +206,10 @@
 </body>
 
 <script>
+    $(document).ready(function () {
+        $('#courses_table').DataTable();
+    });
+
     new bootstrap.Carousel(document.getElementById('timetablesCarousel'), {
         wrap: false,
         touch: false
