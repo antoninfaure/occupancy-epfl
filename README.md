@@ -37,25 +37,50 @@ python scrap.py
 
 ```mermaid
 erDiagram
-    BOOKING }o--|| SCHEDULE : "is for"
     BOOKING }o--|| ROOM : "occupies"
+    BOOKING }o--|| MEETING : "is for (if meeting-related)"
+    BOOKING }o--|| SCHEDULE : "is for (if course-related)"
     COURSE ||--o{ SCHEDULE : "has"
     TEACH_IN }o--|| COURSE : "relates to"
     TEACHER ||--o{ TEACH_IN: "instructs"
     COURSE ||--o{ PLANNED_IN : "is included in"
     STUDYPLAN ||--o{ PLANNED_IN : "consists of"
     STUDYPLAN }o--|| SEMESTER : "runs during"
-    UNIT ||--o{ STUDYPLAN : "is composed of"
-    
+    ETU_UNIT ||--o{ STUDYPLAN : "is composed of"
+    MEETING }o--|| UNIT : "booked"
+
+
+
+    UNIT {
+      string name
+      bool available
+    }
+
+    BOOKING {
+        int schedule_id FK "Optional"
+        int meeting_id FK "Optional"
+        int room_id FK
+        bool available
+    }
+
+    MEETING {
+        int unit_id FK
+        date start_datetime
+        date end_datetime
+        string type
+        string description
+        bool available
+    }
+
     ROOM {
         string name
         string capacity
         string type
         bool available
     }
-    
+
     SCHEDULE {
-        int course_id
+        int course_id FK
         date start_datetime
         date end_datetime
         string type
@@ -79,7 +104,7 @@ erDiagram
         bool available
     }
 
-    UNIT {
+    ETU_UNIT {
         string name
         string code
         string promo
