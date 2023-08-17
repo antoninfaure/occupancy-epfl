@@ -296,10 +296,13 @@ def room():
         print(e)
 
     # Get the soonest booking start date
-    start_date = min([schedule['start_datetime'] for schedule in (course_schedules + event_schedules)]).date()
-
-    # Get the latest booking end date
-    end_date = max([schedule['end_datetime'] for schedule in (course_schedules + event_schedules)]).date()
+    schedules = course_schedules + event_schedules
+    if len(schedules) > 0:
+        start_date = min([schedule['start_datetime'] for schedule in schedules]).date()
+        end_date = max([schedule['end_datetime'] for schedule in schedules]).date()
+    else:
+        start_date = datetime.now().date()
+        end_date = datetime.now().date()
 
     # Generate timetables for the date range
     week_start_date = start_date - timedelta(days=start_date.weekday())
@@ -580,14 +583,19 @@ def find_course():
 
     # Generate timetables for the semester
     if (semester == None):
-        start_date = datetime.now().date()
         if len(schedules) > 0:
+            start_date = min([schedule['start_datetime'] for schedule in schedules]).date()
+            if start_date < datetime.now().date():
+                start_date = datetime.now().date()
             end_date = max([schedule['end_datetime'] for schedule in schedules]).date()
         else:
+            start_date = datetime.now().date()
             end_date = start_date
         week_length = 7
     else:
         start_date = semester['start_date'].date()
+        if start_date < datetime.now().date():
+            start_date = datetime.now().date()
         end_date = semester['end_date'].date()
         week_length = 5
 

@@ -96,6 +96,7 @@ def parseScheduleEcoleDoctorale(soup):
     
     rows = iframe_soup.findAll('tr')
     creneaux = []
+    
     for i, row in enumerate(rows):
         if (i == 0):
             continue
@@ -111,6 +112,7 @@ def parseScheduleEcoleDoctorale(soup):
             duration = int(time[1]) - int(time[0])
         
             rooms_found = [room.text for room in row.findAll('td')[1].findAll('a')]
+
             rooms = []
             for room in rooms_found:
                 if (room in MAP_ROOMS):
@@ -129,6 +131,7 @@ def parseScheduleEcoleDoctorale(soup):
                 label = 'projet'
             else:
                 print(label)
+
             creneau = {
                 'start_hour': start_hour,
                 'duration': duration,
@@ -148,7 +151,7 @@ def parseScheduleEcoleDoctorale(soup):
     for creneau in creneaux:
         found = False
         for i, s in enumerate(schedule):
-            if (s['start_hour'] == creneau['start_hour'] and s['duration'] == creneau['duration'] and s['label'] == creneau['label']):
+            if (s['start_hour'] == creneau['start_hour'] and s['duration'] == creneau['duration'] and s['label'] == creneau['label'] and s['date'] == creneau['date']):
                 schedule[i]['rooms'] = schedule[i]['rooms'] + creneau['rooms']
                 found = True
                 break
@@ -531,7 +534,7 @@ def create_course_schedules(db, course):
         return
     
 
-    db_schedules = list(db.schedules.find({
+    db_schedules = list(db.course_schedules.find({
         "course_id": schedules[0].get("course_id"),
     }))
 
@@ -559,7 +562,7 @@ def create_course_schedules(db, course):
         return
     
     try:
-        db.schedules.insert_many(new_schedules)
+        db.course_schedules.insert_many(new_schedules)
     except Exception as e:
         print(e)
 
@@ -581,7 +584,7 @@ def create_course_bookings(db, course):
         return None
 
     # Get all schedules of a course and add a rooms field as a list of room names of the bookings linked to the schedule
-    db_schedules = list(db.schedules.aggregate([
+    db_schedules = list(db.course_schedules.aggregate([
         {
             "$match": {
                 "course_id": db_course.get("_id")
@@ -589,7 +592,7 @@ def create_course_bookings(db, course):
         },
         {
             "$lookup": {
-                "from": "bookings",
+                "from": "course_bookings",
                 "localField": "_id",
                 "foreignField": "schedule_id",
                 "as": "bookings"
@@ -656,7 +659,7 @@ def create_course_bookings(db, course):
         return
     
     try:
-        db.bookings.insert_many(new_bookings)
+        db.course_bookings.insert_many(new_bookings)
     except Exception as e:
         print(e)
 
@@ -733,16 +736,23 @@ def list_course_rooms(course):
 
     if (course_schedule is None):
         return []
+    
+    if (course.get('semester') == 'ecole_doctorale'):
+        for schedule in course_schedule:
+            for room in schedule['rooms']:
+                if room not in rooms_names:
+                    rooms_names.append(room)
 
-     # Loop through the course schedule
-    for _, time_schedule in course_schedule.items():
-        for _, entry in time_schedule.items():
-            
-            # If it's not a 'skip' entry, create a booking
-            if not entry.get('skip') or entry.get('skip') == False:
-                for room in entry['rooms']:
-                    if room not in rooms_names:
-                        rooms_names.append(room)
+    else:
+        # Loop through the course schedule
+        for _, time_schedule in course_schedule.items():
+            for _, entry in time_schedule.items():
+                
+                # If it's not a 'skip' entry, create a booking
+                if not entry.get('skip') or entry.get('skip') == False:
+                    for room in entry['rooms']:
+                        if room not in rooms_names:
+                            rooms_names.append(room)
 
 
     return rooms_names
