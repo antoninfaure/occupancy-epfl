@@ -297,17 +297,16 @@
 
     });
 
-    const ds = new DragSelect({
-        selectables: document.querySelectorAll('.selectable'),
-        area: document.getElementById('selectable-area'),
-        draggability: false,
-        multiSelectMode: true
-    });
-
-    ds.subscribe('callback', (e) => {
-        console.log(e)
-    });
-
+    // for each tbody inside selectable-area create a new DragSelect
+    let drags = []
+    $('.selectable-table tbody').each(function (index, element) {
+        drags.push(new DragSelect({
+            selectables: element.querySelectorAll('.selectable'),
+            area: document.getElementById('selectable-area').getElementsByClassName('area')[index],
+            draggability: false,
+            multiSelectMode: true
+        }))
+    })
 
     var csrf_token = "{{ csrf_token() }}";
 
@@ -320,11 +319,14 @@
     });
 
     function findFreeRooms() {
-        selection = ds.getSelection()
-        selection = selection.map(x => x = {
+        // for all selections group the dates and times
+        let selections = drags.map(ds => ds.getSelection()).flat()
+        let selection = selections.map(x => x = {
             'date': $(x).data('date'),
             'time': $(x).data('time')
         })
+
+        console.log(selection)
         $.ajax({
             url: '/find_free_rooms',
             type: "POST",
@@ -357,7 +359,7 @@
     }
 
     function resetFind() {
-        ds.clearSelection()
+        drags.forEach(ds => ds.clearSelection())
         $('#available_rooms_table').DataTable().destroy()
         $("#available_rooms_table tbody").empty()
     }

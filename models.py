@@ -130,7 +130,7 @@ course_schedule_validator = {
 event_schedule_validator = {
     "$jsonSchema": {
         "bsonType": "object",
-        "required": ["role_id", "start_datetime", "end_datetime", "available", "type", "visible", "state"],
+        "required": ["role_id", "start_datetime", "end_datetime", "available", "type", "visible", "status"],
         "properties": {
             "role_id": {
                 "bsonType": "objectId",
@@ -163,6 +163,10 @@ event_schedule_validator = {
             "status": {
                 "bsonType": "int",
                 "description": "must be an integer and is required"
+            },
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string"
             }
         }
     }
