@@ -98,7 +98,7 @@ teach_in_validator = {
     }
 }
 
-schedule_validator = {
+course_schedule_validator = {
     "$jsonSchema": {
         "bsonType": "object",
         "required": ["course_id", "start_datetime", "end_datetime", "available", "label"],
@@ -127,7 +127,69 @@ schedule_validator = {
     }
 }
 
-booking_validator = {
+event_schedule_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["role_id", "start_datetime", "end_datetime", "available", "type", "visible", "state"],
+        "properties": {
+            "role_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "start_datetime": {
+                "bsonType": "date",
+                "description": "must be a date and is required"
+            },
+            "end_datetime": {
+                "bsonType": "date",
+                "description": "must be a date and is required"
+            },
+            "available": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            },
+            "type": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "description": {
+                "bsonType": "string",
+                "description": "must be a string"
+            },
+            "visible": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            },
+            "status": {
+                "bsonType": "int",
+                "description": "must be an integer and is required"
+            }
+        }
+    }
+}
+
+course_booking_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["schedule_id", "room_id", "available"],
+        "properties": {
+            "schedule_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "room_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "available": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            }
+        }
+    }
+}
+
+event_booking_validator = {
     "$jsonSchema": {
         "bsonType": "object",
         "required": ["schedule_id", "room_id", "available"],
@@ -191,7 +253,7 @@ planned_in_validator = {
     }
 }
 
-unit_validator = {
+etu_unit_validator = {
     "$jsonSchema": {
         "bsonType": "object",
         "required": ["name", "code", "available"],
@@ -249,6 +311,106 @@ semester_validator = {
                 "bsonType": "array",
                 "description": "must be an array of dates"
             }
+        }
+    }
+}
+
+role_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["user_id", "unit_id", "accred", "available"],
+        "properties": {
+            "user_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "unit_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "accred": {
+                "bsonType": "int",
+                "description": "must be an int and is required"
+            },
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string"
+            },
+            "available": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            }
+        }
+    }
+}
+
+managed_by_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["role_id", "room_id", "available", "accred"],
+        "properties": {
+            "role_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "room_id": {
+                "bsonType": "objectId",
+                "description": "must be an objectId and is required"
+            },
+            "available": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            },
+            "accred": {
+                "bsonType": "int",
+                "description": "must be an int and is required"
+            }
+        }
+    }
+}
+
+unit_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["name", "code", "available"],
+        "properties": {
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "code": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "available": {
+                "bsonType": "bool",
+                "description": "must be a bool and is required"
+            },
+        }
+    }
+}
+
+user_validator = {
+    "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["sciper", "name", "firstname", "available"],
+        "properties": {
+            "sciper": {
+                "bsonType": "int",
+                "description": "must be an int and is required"
+            },
+            "name": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "firstname": {
+                "bsonType": "string",
+                "description": "must be a string and is required"
+            },
+            "available": {
+                "bsonType": "bool", 
+                "description": "must be a bool and is required"
+            },
         }
     }
 }

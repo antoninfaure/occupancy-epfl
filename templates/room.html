@@ -39,7 +39,8 @@
             <div class="col-12 col-md-6 col-lg-4 mx-auto pt-3 text-center">
                 <form action="/room" method="get">
                     <div class="input-group justify-content-center">
-                        <input type="text" autofocus class="form-control" name="name" placeholder="room name... (ex: CE13)">
+                        <input type="text" autofocus class="form-control" name="name"
+                            placeholder="room name... (ex: CE13)">
                         <div class="input-group-append">
                             <button type="submit" class="btn btn-danger">Search</button>
                         </div>
@@ -77,6 +78,8 @@
                             <span class="taken cours p-2">Lecture</span>
                             <span class="taken exercice p-2">Exercise, TP</span>
                             <span class="taken projet p-2">Project, other</span>
+                            <span class="taken event p-2">Event</span>
+                            <span class="taken other p-2">Other</span>
                         </div>
                     </div>
                     <div id="timetablesCarousel" class="carousel slide" data-wrap="false">
@@ -112,8 +115,18 @@
                                                 {% if col|length > 0 %}
                                                 {% if 'skip' not in col.keys() %}
                                                 <td class="{{col['label']}} taken text-center align-middle"
-                                                    rowspan="{{col['duration']}}"><a
-                                                        href="/course?code={{col['course']['code']}}">{{col['course']['name']}}<br>({{col['course']['code']}})</a>
+                                                    rowspan="{{col['duration']}}">
+                                                    <div>
+                                                        {% if col.course %}
+                                                        <a
+                                                            href="/course?code={{col['course']['code']}}">{{col['course']['name']}}<br>({{col['course']['code']}})</a>
+                                                        {% else %}
+                                                        <span class="d-flex text-center justify-content-center">{{ col.name }}</span>
+                                                        {% if col.unit %}
+                                                        <span class="d-flex text-center justify-content-center fst-italic fs-6">{{ col.unit }}</span>
+                                                        {% endif %}
+                                                        {% endif %}
+                                                    </div>
                                                 </td>
                                                 {% endif %}
                                                 {% else %}

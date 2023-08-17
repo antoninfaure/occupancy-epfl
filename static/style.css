@@ -51,16 +51,24 @@ td.taken div .rooms {
     margin-top: 10px;
 }
 
-.projet {
+.taken.projet {
     background-color: #8e0000 !important;
 }
 
-.cours {
+.taken.cours {
     background-color: red !important;
 }
 
-.exercice {
+.taken.exercice {
     background-color: #b51f1f !important;
+}
+
+.taken.event {
+    background-color: #5B248F !important;
+}
+
+.taken.other {
+    background-color: #cf910d !important;
 }
 
 
