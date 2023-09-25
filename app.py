@@ -1,19 +1,18 @@
-from flask import request, Flask, render_template, redirect, url_for, abort
+from flask import request, Flask, render_template, redirect, url_for, abort, jsonify
 from flask_pymongo  import PyMongo, MongoClient
 import pickle 
 from datetime import datetime, timedelta, time as dt_time
 import numpy as np
-from flask_wtf.csrf import CSRFProtect
 import re
 from copy import deepcopy
 from bson.objectid import ObjectId
 import time as t_time
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 client = MongoClient(f"mongodb+srv://{app.config.get('DB_USER')}:{app.config.get('DB_PASSWORD')}@{app.config.get('DB_URL')}/?retryWrites=true&w=majority")
-csrf = CSRFProtect(app)
-csrf.init_app(app)
+CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
 db = client[app.config.get('DB_NAME')]
 
@@ -21,12 +20,21 @@ db = client[app.config.get('DB_NAME')]
 def inject_now():
     return {'now': datetime.utcnow()}
 
-@app.route('/', methods=['GET'])
-def home():
+@app.route('/api/rooms', methods=['GET'])
+def rooms():
 
     # List all rooms
-    rooms = db.rooms.find({ "available": True })
+    rooms = list(db.rooms.find({ "available": True }))
 
+    # replace ObjectId _id with string _id
+    for room in rooms:
+        room['_id'] = str(room['_id'])
+
+    return jsonify(rooms)
+
+
+@app.route('/api/courses', methods=['GET'])
+def courses():
     # List all courses with their semester
     courses = list(db.planned_in.aggregate([
         {
@@ -127,7 +135,7 @@ def home():
         {
             "$project": {
                 "_id": 0,
-                "course_id": "$_id",
+                "_id": "$_id",
                 "name": 1,
                 "code": 1,
                 "credits": 1,
@@ -138,50 +146,20 @@ def home():
 
     courses.extend(course_without_studyplan_with_schedules)
 
-    # Create a basic timetable structure
-    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6:'Sunday'}
-    times = range(8, 20)
-    week_length = 7
-    timetable_template = dict()
-    timetable_template['timetable'] = dict()
-    timetable_template['dates'] = dict()
+    courses = list(courses)
 
-    for time in times:
-        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
-        for day in days_mapping.values():
-            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
+    # replace ObjectId _id with string _id
+    for course in courses:
+        course['_id'] = str(course['_id'])
+        if 'semester' in course:
+            course['semesterType'] = course['semester']['type']
+            course['semester'] = course['semester']['name']
 
-    # Find the next semester
-    semester = db.semesters.find_one({ "available": True }, sort=[("end_date", 1)])
-    
-    # Generate timetables for the next semester
-    start_date = (datetime.now() + timedelta(hours=2)).date()
-    end_date = semester['end_date'].date()
+    return jsonify(courses)
 
-    timetables = []
-
-    week_start_date = start_date - timedelta(days=start_date.weekday())
-    week_start = week_start_date
-    while week_start < end_date:
-        week_timetable = deepcopy(timetable_template)
-        for day_offset in range(week_length): 
-            current_date = week_start + timedelta(days=day_offset)
-            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
-                'date_name': current_date.strftime('%d/%m/%Y')
-            }
-
-            disabled = current_date < start_date
-            for time in times:
-                week_timetable['timetable'][f'{time}-{time+1}'][days_mapping[current_date.weekday()]] = {
-                    'date': current_date,
-                    'disabled': disabled,
-                    'date_name': current_date.strftime('%d/%m/%Y')
-                }
-                
-        timetables.append(week_timetable)
-        week_start = week_start + timedelta(days=7)
-    
-
+@app.route('/api/studyplans', methods=['GET'])
+def studyplans():
+    # List all studyplans with their semester
     studyplans = list(db.studyplans.aggregate([
         {
             "$lookup": {
@@ -206,38 +184,31 @@ def home():
         }
     ]))
 
-    return render_template('index.html', studyplans=studyplans, courses=courses, rooms=rooms, timetables=timetables)
+    # replace ObjectId _id with string _id
+    for studyplan in studyplans:
+        studyplan['_id'] = str(studyplan['_id'])
+        studyplan.pop('unit_id')
+        studyplan.pop('semester_id')
+        studyplan['promo'] = studyplan['unit'][0]['promo']
+        studyplan['section'] = studyplan['unit'][0]['section']
+        studyplan['name'] = studyplan['unit'][0]['name']
+        studyplan.pop('unit')
+        studyplan['semesterType'] = studyplan['semester'][0]['type']
+        studyplan['semester'] = studyplan['semester'][0]['name']
 
-@app.route('/room/', methods=['GET'])
-def room():
-    name = request.args.get('name')
+    return jsonify(studyplans)
+
+@app.route('/api/rooms/<name>', methods=['GET'])
+def room(name):
     if (name == None):
-        return redirect(url_for('home')) 
+        return abort(400)
 
     name = re.sub(r"(?![A-Za-z0-9\-\.])", "", name)
  
     room = db.rooms.find_one({'name': name, "available": True })
+
     if (room == None):
-        return redirect(url_for('home'))
-
-
-
-    # Create a basic timetable structure
-    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6:'Sunday'}
-    times = range(8, 20)
-    week_length = 7
-    timetable_template = dict()
-    timetable_template['timetable'] = dict()
-    timetable_template['dates'] = dict()
-
-    for time in times:
-        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
-        for i in range(week_length):
-            day = days_mapping[i]
-            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
-
-
-    timetables = []
+        return abort(404)
 
     try:
         room_course_bookings = list(db.course_bookings.find({
@@ -303,82 +274,27 @@ def room():
     else:
         start_date = datetime.now().date()
         end_date = datetime.now().date()
+    
+    for schedule in schedules:
+        schedule['_id'] = str(schedule['_id'])
+        schedule.pop('course_id')
+        schedule['course'] = schedule['course'][0]
+        schedule['course'].pop('_id')
+        schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
+        schedule['end'] = schedule['end_datetime'].isoformat()
 
-    # Generate timetables for the date range
-    week_start_date = start_date - timedelta(days=start_date.weekday())
-    week_start = week_start_date
+    room['_id'] = str(room['_id'])
+    room['schedules'] = schedules
 
-    while week_start <= end_date:
-        week_timetable = deepcopy(timetable_template)
-        for day_offset in range(week_length):
-            current_date = week_start + timedelta(days=day_offset)
-            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
-                'date_name': current_date.strftime('%d/%m/%Y')
-            }
-            for time in times:
-                time_key = f'{time}-{time+1}'
-                day_key = days_mapping[current_date.weekday()]
+    return jsonify(room) 
 
-                # Assign course schedules
-                for schedule in course_schedules:
-                    start_time = schedule['start_datetime'].time().hour
-                    end_time = schedule['end_datetime'].time().hour
-                    
-                    # Check if the schedule corresponds to the current time and day
-                    if (schedule['start_datetime'].date() == current_date 
-                            and start_time == time):
-                        duration = end_time - start_time
-                        week_timetable['timetable'][time_key][day_key].update({
-                            'label': schedule['label'],
-                            'duration': duration,
-                            'course': schedule['course'][0]
-                        })
-
-                        # Mark subsequent hours as 'skip' if the course spans multiple hours
-                        for extra_hours in range(1, duration):
-                            if time + extra_hours < max(times):
-                                next_hour_key = f'{time+extra_hours}-{time+1+extra_hours}'
-                                week_timetable['timetable'][next_hour_key][day_key] = {'skip': True}
-
-                # Assign event schedules
-                for schedule in event_schedules:
-                    start_hour = schedule['start_datetime'].time().hour
-                    end_hour = schedule['end_datetime'].time().hour
-
-                    # Check if the schedule corresponds to the current time and day
-                    if (schedule['start_datetime'].date() == current_date 
-                            and start_hour == time):
-                        duration = end_hour - start_hour
-                        map_event_type = {
-                            'event': 'Event',
-                            'other': 'Other'
-                        }
-
-                        schedule_label = schedule['type'] if schedule['type'] in map_event_type else 'other'
-
-                        week_timetable['timetable'][time_key][day_key].update({
-                            'label': schedule_label,
-                            'duration': duration,
-                            'name': schedule['name'],
-                            'unit': schedule['unit'][0]['code']
-                        })
-
-                        # Mark subsequent hours as 'skip' if the event spans multiple hours
-                        for extra_hours in range(1, duration):
-                            if time + extra_hours < max(times):
-                                next_hour_key = f'{time+extra_hours}-{time+1+extra_hours}'
-                                week_timetable['timetable'][next_hour_key][day_key] = {'skip': True}
-
-        timetables.append(week_timetable)
-        week_start += timedelta(days=7)
-
-    return render_template('room.html', room=room, timetables=timetables)
-
-@app.route('/find_free_rooms', methods=['POST'])
+@app.route('/api/rooms/find_free_rooms', methods=['POST'])
 def find_free_rooms():
     selection = request.json
     if (selection == None):
         return abort(400)
+
+    print(selection)
 
     if (type(selection) != list):
         return abort(400)
@@ -389,10 +305,10 @@ def find_free_rooms():
     # Convert selection to datetime ranges
     datetime_ranges = []
     for item in selection:
-        start_time, end_time = map(int, item['time'].split('-'))
-        date_obj = datetime.strptime(item['date'], "%Y-%m-%d")
-        start_datetime = datetime(date_obj.year, date_obj.month, date_obj.day, start_time)
-        end_datetime = datetime(date_obj.year, date_obj.month, date_obj.day, end_time)
+        start_time = item["start"].replace('Z', '+00:00')
+        end_time = item["end"].replace('Z', '+00:00')
+        start_datetime = datetime.fromisoformat(start_time)
+        end_datetime = datetime.fromisoformat(end_time)
         datetime_ranges.append({"start": start_datetime, "end": end_datetime})
        
     # Find all rooms that are booked during the datetime ranges
@@ -437,16 +353,17 @@ def find_free_rooms():
     return rooms_names
 
 
-@app.route('/course', methods=['GET'])
-def find_course():
-    code = request.args.get('code')
+@app.route('/api/courses/<code>', methods=['GET'])
+def find_course(code):
+    if (code == None):
+        return abort(400)
+
     course = db.courses.find_one({ 'code' : code, 'available': True})
 
     if (course == None):
         return abort(404)
     
     # find the plannedin that contains this course and populate the studyplan, then find the semester of the studyplan
-    #  
     semester = list(db.planned_in.aggregate([
         {
             "$match": {
@@ -572,96 +489,26 @@ def find_course():
             }
         }
     ]))
+
+    for schedule in schedules:
+        schedule['_id'] = str(schedule['_id'])
+        schedule.pop('course_id')
+        schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
+        schedule['end'] = schedule['end_datetime'].isoformat()
+
+    course['_id'] = str(course['_id'])
+    if semester != None:
+        course['semester'].pop('_id')
+    
+    for teacher in course['teachers']:
+        teacher.pop('_id')
+    course['schedules'] = schedules
   
-    # Create a basic timetable structure
-    days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5:'Saturday', 6:'Sunday'}
-    times = range(8, 20)
-    timetable_template = dict()
-    timetable_template['timetable'] = dict()
-    timetable_template['dates'] = dict()
 
+    return jsonify(course)
 
-    # Generate timetables for the semester
-    if (semester == None):
-        if len(schedules) > 0:
-            start_date = min([schedule['start_datetime'] for schedule in schedules]).date()
-            if start_date < datetime.now().date():
-                start_date = datetime.now().date()
-            end_date = max([schedule['end_datetime'] for schedule in schedules]).date()
-        else:
-            start_date = datetime.now().date()
-            end_date = start_date
-        week_length = 7
-    else:
-        start_date = semester['start_date'].date()
-        if start_date < datetime.now().date():
-            start_date = datetime.now().date()
-        end_date = semester['end_date'].date()
-        week_length = 5
-
-    for time in times:
-        timetable_template['timetable'][f'{time}-{time+1}'] = dict()
-        for i in range(week_length):
-            day = days_mapping[i]
-            timetable_template['timetable'][f'{time}-{time+1}'][day] = dict()
-
-    timetables = []
-
-    week_start_date = start_date - timedelta(days=start_date.weekday())
-    week_start = week_start_date
-
-    while week_start <= end_date:
-        week_timetable = deepcopy(timetable_template)
-        for day_offset in range(week_length):  # 5-day week
-            current_date = week_start + timedelta(days=day_offset)
-            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
-                'date_name': current_date.strftime('%d/%m/%Y')
-            }
-            for time in times:
-                time_key = f'{time}-{time+1}'
-                day_key = days_mapping[current_date.weekday()]
-
-                if current_date < start_date:
-                    week_timetable['timetable'][time_key][day_key] = {
-                        'disabled': True,
-                    }
-                    continue
-                
-                if semester != None:
-                    if 'skip_dates' in semester and current_date in semester['skip_dates']:
-                        week_timetable['timetable'][time_key][day_key] = {
-                            'disabled': True,
-                        }
-                        continue
-
-                for schedule in schedules:
-                    start_time = schedule['start_datetime'].time().hour
-                    end_time = schedule['end_datetime'].time().hour
-                                
-                    # Check if the schedule corresponds to the current time and day
-                    if (schedule['start_datetime'].date() == current_date and start_time == time):
-                        duration = end_time - start_time
-                        week_timetable['timetable'][time_key][day_key] = {
-                            'label': schedule['label'],
-                            'duration': duration,
-                            'rooms': schedule['rooms']
-                        }
-
-                        # Mark subsequent hours as 'skip' if the booking spans multiple hours
-                        for extra_hours in range(1, duration):
-                            if time + extra_hours < max(times):
-                                next_hour_key = f'{time+extra_hours}-{time+1+extra_hours}'
-                                week_timetable['timetable'][next_hour_key][day_key] = {'skip': True}
-
-        timetables.append(week_timetable)
-        week_start = week_start + timedelta(days=7)
-
-    return render_template('course.html', course=course, timetables=timetables)
-
-@app.route('/find_studyplan', methods=['GET'])
-def find_studyplan():
-    studyplan_id = request.args.get('studyplan')
-
+@app.route('/api/studyplans/<studyplan_id>', methods=['GET'])
+def find_studyplan(studyplan_id):
     if (studyplan_id == None):
         return abort(400)
     
@@ -808,99 +655,26 @@ def find_studyplan():
         }
     ]))
 
-    def generate_week_timetable(week_start, all_schedules):
-        days_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6:'Sunday'}
-        times = range(8, 20)
-        week_length = 5
-
-        week_timetable = dict()
-        week_timetable['timetable'] = dict()
-        week_timetable['dates'] = dict()
-
-        for time in times:
-            week_timetable['timetable'][f'{time}-{time+1}'] = dict()
-            for i in range(week_length):
-                day = days_mapping[i]
-                week_timetable['timetable'][f'{time}-{time+1}'][day] = []
-
-        for day_offset in range(week_length):
-            current_date = week_start + timedelta(days=day_offset)
-            current_day = days_mapping[current_date.weekday()]
-
-            week_timetable['dates'][days_mapping[current_date.weekday()]] = {
-                'date_name': current_date.strftime('%d/%m/%Y')
-            }
-
-            # Filter schedules that are relevant to the current day and group them by (course, start hour, end hour)
-            schedules_at_this_day = [b for b in all_schedules if b['start_datetime'].date() == current_date]
-
-            # For each group, add to the timetable
-            for schedule in schedules_at_this_day:
-                course = schedule['course']
-                rooms = schedule['rooms']
-                label = schedule['label']
-
-                start_hour = schedule['start_datetime'].hour
-                end_hour = schedule['end_datetime'].hour
-                duration = end_hour - start_hour
-
-                week_timetable['timetable'][f'{start_hour}-{start_hour+1}'][current_day].append({
-                    'course': course,
-                    'rooms': rooms,
-                    'rowspan': duration,
-                    'label': label
-                })
-        
-        
-        
-
-        # Adjust for continuous multi-hour courses
-        for time in times:
-            for i in range(week_length):
-                day = days_mapping[i]
-                slots = week_timetable['timetable'][f'{time}-{time+1}'][day]
-                for slot in slots:
-                    if 'rowspan' not in slot:
-                        continue
-                    if slot or slot['rowspan'] > 1:
-                        for next_time in range(time + 1, time + slot['rowspan']):
-                            week_timetable['timetable'][f'{next_time}-{next_time+1}'][day].append({'skip': True})
-
-        # Find max colspan for each day
-        for i in range(week_length):
-            day = days_mapping[i]
-            colspan = 1
-            for time in times:
-                slots = week_timetable['timetable'][f'{time}-{time+1}'][day]
-                if len(slots) > colspan:
-                    colspan = len(slots)
-            week_timetable['dates'][day]['colspan'] = colspan
-
-        # Adujst length of slots to match colspan
-        for time in times:
-            for i in range(week_length):
-                day = days_mapping[i]
-                slots = week_timetable['timetable'][f'{time}-{time+1}'][day]
-                if len(slots) < week_timetable['dates'][day]['colspan']:
-                    for _ in range(week_timetable['dates'][day]['colspan'] - len(slots)):
-                        slots.append({})
-
-        return week_timetable
+    for schedule in schedules:
+        schedule['_id'] = str(schedule['_id'])
+        schedule.pop('course_id')
+        schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
+        schedule['end'] = schedule['end_datetime'].isoformat()
+        schedule['course'].pop('_id')
     
-    # Generate timetables for the entire semester
-    timetables = []
-    start_date = semester['start_date'].date()
-    end_date = semester['end_date'].date()
-
-    week_start = start_date - timedelta(days=start_date.weekday())
-    while week_start < end_date:
-        week_timetable = generate_week_timetable(week_start, schedules)
-        timetables.append(week_timetable)
-        
-        week_start = week_start + timedelta(days=7)
+    studyplan['schedules'] = schedules
 
 
-    return render_template('semester.html', studyplan=studyplan, timetables=timetables, courses=courses_in_studyplan)
+    studyplan['_id'] = str(studyplan['_id'])
+    studyplan.pop('unit_id')
+    studyplan.pop('semester_id')
+
+    studyplan['unit'].pop('_id')
+    
+    studyplan['semesterType'] = semester['type']
+    studyplan['semester'] = semester['name']
+
+    return jsonify(studyplan)
 
     
 
