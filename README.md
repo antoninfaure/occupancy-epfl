@@ -4,7 +4,25 @@
 
 Interface of edu.epfl.ch, useful for finding free rooms or schedule by studyplan.
 
-## Run
+## Features
+
+- **Room Availability**: Find available rooms based on selected date and time ranges. The system displays rooms that are not booked during the specified time slots.
+  
+- **Retrieve Course Information**: Easily find detailed information about a specific course by providing its code. The system retrieves details such as the course's semester, assigned teachers, and schedules.
+
+- **Explore Study Plans**: Explore study plans using their unique study plan ID. The application showcases an interactive and organized timetable that covers the entire semester, highlighting courses, schedules, and room bookings.
+
+## Frontend
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
+
+The frontend repository can be found **[here](https://github.com/antoninfaure/occupancy-front)**
+
+## Backend
+![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white) ![Heroku](https://img.shields.io/badge/heroku-%23430098.svg?style=for-the-badge&logo=heroku&logoColor=white)
+
+The current repository is for the backend, which is a Flask webapp used as a REST API.
+
+### Run
 
 In order to run this project, you must have **[Flask](https://flask.palletsprojects.com/en/2.3.x/)** installed.
 
@@ -21,20 +39,14 @@ flask run
 
 You can now go to [localhost:5000](http://localhost:5000) to see the page.
 
-## Data Scraping
+### Data Scraping
 
 To scrap the data you just need to configure the semesters (names, dates, types) in the `scrap.py` file and then run:
 ```
 python scrap.py
 ```
 
-## Features
 
-- **Room Availability**: Find available rooms based on selected date and time ranges. The system displays rooms that are not booked during the specified time slots.
-  
-- **Retrieve Course Information**: Easily find detailed information about a specific course by providing its code. The system retrieves details such as the course's semester, assigned teachers, and schedules.
-
-- **Explore Study Plans**: Explore study plans using their unique study plan ID. The application showcases an interactive and organized timetable that covers the entire semester, highlighting courses, schedules, and room bookings.
 
 ## ER Model
 
