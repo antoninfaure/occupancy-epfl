@@ -2,6 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+
 Interface of edu.epfl.ch, useful for finding free rooms or schedule by studyplan.
 
 ## Features
