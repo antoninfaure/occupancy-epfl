@@ -577,7 +577,7 @@ def find_studyplan(studyplan_id):
     courses_in_studyplan = list(db.planned_in.aggregate(pipeline))
 
     if (len(courses_in_studyplan) == 0):
-        return redirect(url_for('home'))
+        return abort(404)
     
     # Find semester
     semester = db.semesters.find_one({ '_id': studyplan['semester_id'] })
@@ -680,7 +680,7 @@ def find_studyplan(studyplan_id):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return redirect(url_for('home'))
-    
+    return jsonify(error=str(e)), 404
+
 if __name__ == "__main__":
     app.run(debug=True)
