@@ -316,8 +316,8 @@ def find_free_rooms():
     for date_range in datetime_ranges:
         query_conditions.append({
             "$and": [
-                {"start_datetime": {"$lt": date_range["end"]}},
-                {"end_datetime": {"$gt": date_range["start"]}}
+                {"start_datetime": {"gte": date_range["end"]}},
+                {"end_datetime": {"$lte": date_range["start"]}}
             ]
         })
 
