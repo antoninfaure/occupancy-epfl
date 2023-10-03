@@ -291,35 +291,35 @@ def room(name):
 @app.route('/api/rooms/find_free_rooms', methods=['POST'])
 def find_free_rooms():
     selection = request.json
+
     if (selection == None):
         return abort(400)
-
-    print(selection)
 
     if (type(selection) != list):
         return abort(400)
 
     if (len(selection) > 0 and type(selection[0]) != dict):
         return abort(400)
-    
+
     # Convert selection to datetime ranges
     datetime_ranges = []
     for item in selection:
         start_time = item["start"].replace('Z', '+00:00')
         end_time = item["end"].replace('Z', '+00:00')
-        start_datetime = datetime.fromisoformat(start_time)
-        end_datetime = datetime.fromisoformat(end_time)
+        start_datetime = datetime.fromisoformat(start_time) + timedelta(hours=2)
+        end_datetime = datetime.fromisoformat(end_time) + timedelta(hours=2)
         datetime_ranges.append({"start": start_datetime, "end": end_datetime})
-       
+
     # Find all rooms that are booked during the datetime ranges
     query_conditions = []
     for date_range in datetime_ranges:
         query_conditions.append({
-            "$and": [
-                {"start_datetime": {"gte": date_range["end"]}},
-                {"end_datetime": {"$lte": date_range["start"]}}
-            ]
-        })
+        "$or": [
+            {"start_datetime": {"$lt": date_range["end"]}, "end_datetime": {"$gt": date_range["start"]}},
+            {"start_datetime": {"$gte": date_range["start"], "$lt": date_range["end"]}},
+            {"start_datetime": {"$lte": date_range["start"]}, "end_datetime": {"$gte": date_range["end"]}}
+        ]
+    })
 
     if (len(query_conditions) == 0):
         free_rooms = list(db.rooms.find({ "available": True }))
