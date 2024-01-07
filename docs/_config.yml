@@ -1,4 +1,4 @@
-theme: just-the-docs
+remote_theme: just-the-docs/just-the-docs
 title: Occupancy FLEP API
 description: Documentation for the Occupancy FLEP API v2
 repository: antoninfaure/occupancy-epfl
