@@ -1,8 +1,6 @@
-## Introduction
 
 This document provides some documentation about the API endpoints of Occupancy FLEP API.
 
-- [Introduction](#introduction)
 - [Endpoints](#endpoints)
   - [Courses](#courses)
   - [Study Plans](#study-plans)
