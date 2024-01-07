@@ -47,6 +47,10 @@ npm run start
 
 You can now go to [localhost:5000](http://localhost:5000) to see the page.
 
+## Documentation
+
+The API documentation can be found **[here](https://antoninfaure.github.io/occupancy-epfl/)**
+
 ## ER Model
 
 ```mermaid
