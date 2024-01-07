@@ -12,8 +12,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 client = MongoClient(f"mongodb+srv://{app.config.get('DB_USER')}:{app.config.get('DB_PASSWORD')}@{app.config.get('DB_URL')}/?retryWrites=true&w=majority")
-#CORS(app, resources={r"/api/*": {"origins": ["https://antoninfaure.github.io", "https://occupancy.flep.ch", "https://lm.polysource.ch"]}})
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": ["https://antoninfaure.github.io", "https://occupancy.flep.ch", "https://lm.polysource.ch"]}})
+#CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 db = client[app.config.get('DB_NAME')]
 
