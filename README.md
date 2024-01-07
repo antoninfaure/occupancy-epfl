@@ -13,41 +13,39 @@ Interface of edu.epfl.ch, useful for finding free rooms or schedule by studyplan
 
 - **Explore Study Plans**: Explore study plans using their unique study plan ID. The application showcases an interactive and organized timetable that covers the entire semester, highlighting courses, schedules, and room bookings.
 
+
+
 ## Frontend
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![SASS](https://img.shields.io/badge/SASS-hotpink.svg?style=for-the-badge&logo=SASS&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
 
 The frontend repository can be found **[here](https://github.com/antoninfaure/occupancy-front)**
 
-## Backend
-![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white) ![Heroku](https://img.shields.io/badge/heroku-%23430098.svg?style=for-the-badge&logo=heroku&logoColor=white)
+## Scraper
+ ![Python](https://img.shields.io/badge/Python-%23000.svg?style=for-the-badge&logo=Python&logoColor=white&color=%233776AB) ![MongoDB](https://img.shields.io/badge/MongoDB-%23000.svg?style=for-the-badge&logo=MongoDB&logoColor=white&color=%2347A248) ![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)
 
-The current repository is for the backend, which is a Flask webapp used as a REST API, and hosted on Heroku.
+The scraper repository can be found **[here](https://github.com/antoninfaure/occupancy-scraper)**
+
+## Backend
+![Node.js](https://img.shields.io/badge/Node.js-%23000.svg?style=for-the-badge&logo=Node.js&logoColor=white&color=%23339933) ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-%23000.svg?style=for-the-badge&logo=MongoDB&logoColor=white&color=%2347A248) ![Heroku](https://img.shields.io/badge/heroku-%23430098.svg?style=for-the-badge&logo=heroku&logoColor=white) 
+
+The current repository is for the backend, which is a Node.js webapp used as a REST API for a MongoDB database, and hosted on Heroku.
 
 ### Run
 
-In order to run this project, you must have **[Flask](https://flask.palletsprojects.com/en/2.3.x/)** installed.
+In order to run this project, you must have **[Node.js](https://nodejs.org/)** installed.
 
 1. Install the required dependencies:
 ```
-pip install -r requirements.txt
+npm install
 ```
 2. Configure the environnement variables in the `.env` file
 
-3. Launch the Flask application:
+3. Launch the Node application:
 ```
-flask run
+npm run start
 ```
 
 You can now go to [localhost:5000](http://localhost:5000) to see the page.
-
-### Data Scraping
-
-To scrap the data you just need to configure the semesters (names, dates, types) in the `scrap.py` file and then run:
-```
-python scrap.py
-```
-
-
 
 ## ER Model
 
