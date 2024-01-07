@@ -57,48 +57,18 @@ erDiagram
     COURSE_BOOKING }o--|| ROOM : "occupies"
     COURSE_BOOKING }o--|| COURSE_SCHEDULE : "is for (if course-related)"
     COURSE ||--o{ COURSE_SCHEDULE : "has"
-    TEACH_IN }o--|| COURSE : "relates to"
     EVENT_BOOKING }o--|| ROOM : "occupies"
-    TEACHER ||--o{ TEACH_IN: "instructs"
+    TEACHER }o--o{ COURSE: "teach in"
     COURSE ||--o{ PLANNED_IN : "is included in"
     STUDYPLAN ||--o{ PLANNED_IN : "consists of"
     STUDYPLAN }o--|| SEMESTER : "runs during"
-    ETU_UNIT ||--o{ STUDYPLAN : "is composed of"
-    EVENT_SCHEDULE }o--|| ROLE : "booked"
-    ROLE }o--|{ USER : "has role"
-    ROLE }o--|{ UNIT : "in unit"
-    ROOM }|--o{ MANAGED_BY : "managed by"
-    MANAGED_BY }o--|{ ROLE : "manages"
-
-    UNIT {
-      string name
-      bool available
-    }
-
-    ROLE {
-        int user_id
-        int unit_id
-        int accred
-        string name
-        bool available
-    }
-
-    MANAGED_BY {
-      int role_id
-      int room_id
-      int accred
-      bool available
-    }
-
-
+    UNIT ||--o{ STUDYPLAN : "is composed of"
 
     COURSE_BOOKING {
         int schedule_id FK
         int room_id FK
         bool available
     }
-
-
 
     EVENT_SCHEDULE {
         int role_id FK
@@ -153,7 +123,7 @@ erDiagram
         bool available
     }
 
-    ETU_UNIT {
+    UNIT {
         string name
         string code
         string promo
