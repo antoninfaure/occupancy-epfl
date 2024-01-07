@@ -12,7 +12,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config.from_pyfile('config.py')
 client = MongoClient(f"mongodb+srv://{app.config.get('DB_USER')}:{app.config.get('DB_PASSWORD')}@{app.config.get('DB_URL')}/?retryWrites=true&w=majority")
-CORS(app, resources={r"/api/*": {"origins": ["https://antoninfaure.github.io", "https://occupancy.flep.ch", "https://lm.polysource.ch"]}})
+#CORS(app, resources={r"/api/*": {"origins": ["https://antoninfaure.github.io", "https://occupancy.flep.ch", "https://lm.polysource.ch"]}})
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 db = client[app.config.get('DB_NAME')]
 
@@ -35,125 +36,89 @@ def rooms():
 
 @app.route('/api/courses', methods=['GET'])
 def courses():
-    # List all courses with their semester
+    # List all planned_in with their studyplan
     courses = list(db.planned_in.aggregate([
         {
-            "$match": {
-                "available": True
-            }
-        },
-        {
-            "$group": {
-                "_id": "$course_id",
-                "studyplan_id": { "$first": "$studyplan_id" } # only consider the first studyplan_id
-            }
-        },
-        {
-            "$lookup": {
-                "from": "courses",
-                "localField": "_id",
-                "foreignField": "_id",
-                "as": "courseDetails"
-            }
-        },
-        {
-            "$lookup": {
-                "from": "studyplans",
-                "localField": "studyplan_id",
-                "foreignField": "_id",
-                "as": "studyplanDetails"
-            }
-        },
-        {
-            "$lookup": {
-                "from": "semesters",
-                "localField": "studyplanDetails.semester_id",
-                "foreignField": "_id",
-                "as": "semesterDetails"
-            }
-        },
-        {
-            "$unwind": "$courseDetails"
-        },
-        {
-            "$unwind": "$semesterDetails" 
-        },
-        {
-            "$project": { # set courseDetails as root and semesterDetails as semester
-                "_id": 0, 
-                "mergedDoc": { "$mergeObjects": ["$$ROOT", "$courseDetails"] },
-                "semester": "$semesterDetails"
-            }
-        },
-        {
-            "$replaceRoot": { # replace root with mergedDoc
-                "newRoot": {
-                    "$mergeObjects": ["$mergedDoc", { "semester": "$semester" }]
+        "$match": {
+            "available": True
+        }
+    },
+    {
+        "$lookup": {
+            "from": "courses",
+            "localField": "course_id",
+            "foreignField": "_id",
+            "as": "course"
+        }
+    },
+    {
+        "$unwind": "$course"
+    },
+    {
+        "$lookup": {
+            "from": "studyplans",
+            "localField": "studyplan_id",
+            "foreignField": "_id",
+            "as": "studyplan"
+        }
+    },
+    {
+        "$unwind": "$studyplan"
+    },
+    {
+        "$lookup": {
+            "from": "semesters",
+            "localField": "studyplan.semester_id",
+            "foreignField": "_id",
+            "as": "semester"
+        }
+    },
+    {
+        "$unwind": "$semester"
+    },
+    {
+        "$group": {
+            "_id": "$course_id",
+            "courseDocument": { "$first": "$course" },
+            "studyplans": {
+                "$push": {
+                    "semesterType": "$semester.type"
                 }
             }
-        },
-        {
-            "$project": { # remove unnecessary fields
-                "mergedDoc": 0,
-                "semesterDetails": 0,
-                "studyplanDetails": 0,
-                "courseDetails": 0,
-                "studyplan_id": 0,
-            }
         }
-    ]))
-    
-    courses_with_studyplan_ids = [course['_id'] for course in courses]
-
-    course_without_studyplan_with_schedules = list(db.course_schedules.aggregate([
-        {
-            "$match": {
-                "available": True,
-                "course_id": { "$nin": courses_with_studyplan_ids }
-            }
-        },
-        {
-            "$lookup": {
-                "from": "courses",
-                "localField": "course_id",
-                "foreignField": "_id",
-                "as": "courseDetails"
-            }
-        },
-        {
-            "$unwind": "$courseDetails"
-        },
-        {
-            "$group": {
-                "_id": "$course_id",
-                "name": { "$first": "$courseDetails.name" },
-                "code": { "$first": "$courseDetails.code" },
-                "credits": { "$first": "$courseDetails.credits" },
-                "edu_url": { "$first": "$courseDetails.edu_url" }
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "_id": "$_id",
-                "name": 1,
-                "code": 1,
-                "credits": 1,
-                "edu_url": 1
-            }
+    },
+    {
+        "$lookup": {
+            "from": "teachers",
+            "localField": "courseDocument.teachers",
+            "foreignField": "_id",
+            "as": "teachers"
         }
+    },
+     {
+        "$addFields": {
+            "courseDocument.studyplans": "$studyplans",
+            "courseDocument.teachers": "$teachers"
+        }
+    },
+    {
+        "$replaceRoot": { "newRoot": "$courseDocument" }
+    }
     ]))
-
-    courses.extend(course_without_studyplan_with_schedules)
-
-    courses = list(courses)
 
     # replace ObjectId _id with string _id
     for course in courses:
         course['_id'] = str(course['_id'])
-        if 'semester' in course:
-            course['semesterType'] = course['semester']['type']
-            course['semester'] = course['semester']['name']
+        for teacher in course['teachers']:
+            teacher.pop('_id')
+        if 'studyplans' in course:
+            semesterType = None
+            for studyplan in course['studyplans']:
+                if studyplan['semesterType'] != 'year' and semesterType == None:
+                    semesterType = studyplan['semesterType']
+            if semesterType != None:
+                course['semesterType'] = semesterType
+
 
     return jsonify(courses)
 
@@ -163,7 +128,7 @@ def studyplans():
     studyplans = list(db.studyplans.aggregate([
         {
             "$lookup": {
-                "from": "etu_units",
+                "from": "units",
                 "localField": "unit_id",
                 "foreignField": "_id",
                 "as": "unit"
@@ -184,12 +149,16 @@ def studyplans():
         }
     ]))
 
+    
     # replace ObjectId _id with string _id
     for studyplan in studyplans:
         studyplan['_id'] = str(studyplan['_id'])
         studyplan.pop('unit_id')
         studyplan.pop('semester_id')
-        studyplan['promo'] = studyplan['unit'][0]['promo']
+        if 'promo' not in studyplan['unit'][0]:
+            studyplan['promo'] = None
+        else:
+            studyplan['promo'] = studyplan['unit'][0]['promo']
         studyplan['section'] = studyplan['unit'][0]['section']
         studyplan['name'] = studyplan['unit'][0]['name']
         studyplan.pop('unit')
@@ -242,24 +211,7 @@ def room(name):
                     'available': True,
                     'status': 0
                 }
-            },
-            {
-                "$lookup": {
-                    "from": "roles",
-                    "localField": "role_id",
-                    "foreignField": "_id",
-                    "as": "role"
-                }
-            },
-            {
-                # Get the role unit
-                "$lookup": {
-                    "from": "units",
-                    "localField": "role.unit_id",
-                    "foreignField": "_id",
-                    "as": "unit"
-                }
-            }   
+            }
         ]))
 
 
@@ -280,6 +232,7 @@ def room(name):
         schedule.pop('course_id')
         schedule['course'] = schedule['course'][0]
         schedule['course'].pop('_id')
+        schedule['course'].pop('teachers')
         schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
         schedule['end'] = schedule['end_datetime'].isoformat()
 
@@ -362,82 +315,70 @@ def find_course(code):
 
     if (course == None):
         return abort(404)
+
+
+    if  "teachers" in course:
+        # Retrieve teacher details for each ID in the 'teachers' field
+        teachers_details = list(db.teachers.find({'_id': {'$in': course['teachers']}}))
+
+        # Replace or augment the 'teachers' field in the course document
+        course['teachers'] = teachers_details
     
-    # find the plannedin that contains this course and populate the studyplan, then find the semester of the studyplan
-    semester = list(db.planned_in.aggregate([
+    # find the plannedin that contains this course and populate the studyplan, popule the semester of the studyplans
+    studyplans = list(db.planned_in.aggregate([
         {
-            "$match": {
-                'course_id': course['_id'],
-                'available': True
+        "$match": {
+            'course_id': course['_id'],
+            'available': True
+        }
+    },
+    {
+        "$lookup": {
+            "from": "studyplans",
+            "localField": "studyplan_id",
+            "foreignField": "_id",
+            "as": "studyplan"
+        }
+    },
+    {
+        "$unwind": "$studyplan"
+    },
+    {
+        "$lookup": {
+            "from": "semesters",
+            "localField": "studyplan.semester_id",
+            "foreignField": "_id",
+            "as": "studyplan.semester"
+        }
+    },
+    {
+        "$unwind": "$studyplan.semester"
+    },
+    {
+        "$group": {
+            "_id": "$course_id",
+            "studyplans": {
+                "$push": {
+                    "studyplan_id": "$studyplan._id",
+                    "name": "$studyplan.name",
+                    "semester": "$studyplan.semester"
+                }
             }
-        },
-        {
-            "$lookup": {
-                "from": "studyplans",
-                "localField": "studyplan_id",
-                "foreignField": "_id",
-                "as": "studyplan"
-            }
-        },
-        {
-            "$unwind": "$studyplan"
-        },
-        {
-            "$lookup": {
-                "from": "semesters",
-                "localField": "studyplan.semester_id",
-                "foreignField": "_id",
-                "as": "semester"
-            }
-        },
-        {
-            "$unwind": "$semester"
-        },
-        {
+        }
+    },
+    {
         "$project": {
-                "_id": 0,
-                "semester": 1
-            }
-        },
-        {
-            "$limit": 1
+            "_id": 0,
+            "course_id": "$_id",
+            "studyplans": 1
         }
+    },
     ]))
     
-    if semester != None and len(semester) > 0:
-        semester = semester[0]['semester']
-        course['semester'] = semester
+    if studyplans != None and len(studyplans) > 0:
+        course['studyplans'] = studyplans[0]['studyplans']
     else:
-        semester = None
-
-    # list teachers
-    teachers = list(db.teach_in.aggregate([
-        {
-            "$match": {
-                'course_id': course['_id'],
-                'available': True
-            }
-        },
-        {
-            "$lookup": {
-                "from": "teachers",
-                "localField": "teacher_id",
-                "foreignField": "_id",
-                "as": "teacher"
-            }
-        },
-        {
-            "$unwind": "$teacher"
-        },
-        {
-            "$project": {
-                "_id": 0,
-                "teacher": 1
-            }
-        }
-    ]))
-
-    course['teachers'] = [teacher['teacher'] for teacher in teachers if teacher != None]
+        studyplans = None
 
     schedules = list(db.course_schedules.aggregate([
             {
@@ -495,14 +436,20 @@ def find_course(code):
         schedule.pop('course_id')
         schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
         schedule['end'] = schedule['end_datetime'].isoformat()
+        schedule.pop('available')
 
     course['_id'] = str(course['_id'])
-    if semester != None:
-        course['semester'].pop('_id')
+    if studyplans != None:
+        for studyplan in course['studyplans']:
+            studyplan['studyplan_id'] = str(studyplan['studyplan_id'])
+            studyplan['semester'].pop('_id')
+
     
     for teacher in course['teachers']:
         teacher.pop('_id')
+        teacher.pop('available')
     course['schedules'] = schedules
+    course.pop('available')
   
 
     return jsonify(course)
@@ -520,7 +467,7 @@ def find_studyplan(studyplan_id):
         },
             {
             "$lookup": {
-                "from": "etu_units",
+                "from": "units",
                 "localField": "unit_id",
                 "foreignField": "_id",
                 "as": "unit"
@@ -661,6 +608,7 @@ def find_studyplan(studyplan_id):
         schedule['start'] = (schedule['start_datetime'] + timedelta(minutes=15)).isoformat()
         schedule['end'] = schedule['end_datetime'].isoformat()
         schedule['course'].pop('_id')
+        schedule['course'].pop('teachers')
     
     studyplan['schedules'] = schedules
 
