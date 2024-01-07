@@ -24,7 +24,13 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+    origin: [
+        'https://occupancy.flep.ch',
+        'https://antoninfaure.github.io',
+        'https://lm.polysource.ch'
+    ]
+}));
 
 // ROUTES
 app.use('/api/rooms', routerRooms);
