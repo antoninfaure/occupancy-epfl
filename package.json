@@ -6,7 +6,8 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "build": "tsc",
-    "serve": "node dist/index.js"
+    "serve": "node dist/index.js",
+    "prod": "npm run build && npm run serve",
   },
   "repository": {
     "type": "git",
