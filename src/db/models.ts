@@ -14,6 +14,11 @@ const RoomSchema = new Schema({
         type: String,
         required: true
     },
+    link: String,
+    coordinates: {
+        latitude: Number,
+        longitude: Number
+    },
     capacity: Number
 }, { collection: 'rooms' });
 

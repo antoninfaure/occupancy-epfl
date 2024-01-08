@@ -24,10 +24,12 @@ export const getRoom = async (req: Request, res: Response) => {
     const event_schedules = await fetchRoomEventSchedules(room_id);
 
     // Add the bookings to the room object
-    const { name, type } = room
+    const { name, type, link, coordinates } = room
     const result = {
         name,
         type,
+        link,
+        coordinates,
         schedules: course_schedules.concat(event_schedules)
     }
     
