@@ -12,7 +12,7 @@ export const fetchRooms = async () => {
 
     const rooms = await RoomModel.find({
         available: true
-    }).select(['-_id', 'name', 'type']).lean();
+    }).select(['-_id', 'name', 'type', 'coordinates']).lean();
     return rooms;
 }
 
@@ -55,4 +55,58 @@ export const fetchBookedRoomsIds = async (query_conditions: any) => {
     const booked_rooms_ids = [...course_booked_rooms_ids, ...event_booked_rooms_ids];
 
     return booked_rooms_ids;
+}
+
+export const sortRoomsByDistance = async (rooms: any, coordinates: any, ascending=true) => {
+    /*
+        Sort rooms by distance
+        - Inputs:
+            - rooms: Array of rooms (name, type)
+            - coordinates: Object with latitude and longitude properties
+        - Outputs:
+            - Array of rooms (name, type, distance)
+    */
+
+    const rooms_with_distance = await Promise.all(rooms.map(async (room: any) => {
+        const room_coordinates = { latitude: room.coordinates[0], longitude: room.coordinates[1] };
+
+        // Calculate distance between room and coordinates
+        const distance = await computeDistance(room_coordinates, coordinates);
+
+        return { ...room, distance };
+    }));
+
+    const sorted_rooms = rooms_with_distance.sort((a: any, b: any) => {
+        if (ascending) return a.distance - b.distance;
+        return b.distance - a.distance;
+    });
+
+    return sorted_rooms;
+}
+
+const computeDistance = async (coords_a: any, coords_b: any) => {
+    /*
+        Compute distance between two coordinates
+        - Inputs:
+            - coords_a: Object with latitude and longitude properties
+            - coords_b: Object with latitude and longitude properties
+        - Outputs:
+            - Distance in meters
+    */
+
+    const R = 6371e3; // meters
+    const phi1 = coords_a.latitude * Math.PI / 180; // phi, lambda in radians
+    const phi2 = coords_b.latitude * Math.PI / 180;
+    const delta_phi = (coords_b.latitude - coords_a.latitude) * Math.PI / 180;
+    const delta_lambda = (coords_b.longitude - coords_a.longitude) * Math.PI / 180;
+
+    const a = Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2) +
+        Math.cos(phi1) * Math.cos(phi2) *
+        Math.sin(delta_lambda / 2) * Math.sin(delta_lambda / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    const d = R * c; // in meters
+
+    return d;
 }

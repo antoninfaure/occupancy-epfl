@@ -1,7 +1,7 @@
 // controllers/rooms.ts
 import { Response, Request} from 'express';
 
-import { fetchRooms, fetchRoom, fetchBookedRoomsIds } from "../services/rooms";
+import { fetchRooms, fetchRoom, fetchBookedRoomsIds, sortRoomsByDistance } from "../services/rooms";
 import { fetchRoomCourseSchedules, fetchRoomEventSchedules } from "../services/bookings";
 
 export const getRooms = async (req: Request, res: Response) => {
@@ -35,7 +35,7 @@ export const getRoom = async (req: Request, res: Response) => {
 }
 
 export const getAvailableRooms = async (req: Request, res: Response) => {
-    const { selection } = req.body;
+    const { selection, coordinates } = req.body;
 
     if (!selection) return res.status(400).json({ message: "Missing selection" });
 
@@ -51,9 +51,21 @@ export const getAvailableRooms = async (req: Request, res: Response) => {
         return res.status(400).json({ message: err.message });
     }
 
+    if (coordinates) {
+        // Coordinates must be an object with latitude and longitude properties
+        if (typeof coordinates !== "object") return res.status(400).json({ message: "Coordinates must be an object" });
+        if (!coordinates.latitude || !coordinates.longitude) return res.status(400).json({ message: "Coordinates must have latitude and longitude properties" });
+    }
+
+    // Get all rooms
     const all_rooms = await fetchRooms();
     
-    if (selection.length === 0) return res.status(200).json(all_rooms);
+    if (selection.length === 0) {
+        if (!coordinates) return res.status(200).json(all_rooms);
+
+        const sorted_rooms = await sortRoomsByDistance(all_rooms, coordinates);
+        return res.status(200).json(sorted_rooms);
+    }
 
     const datetime_ranges = selection.map(({ start, end }: any) => {
         const start_datetime = new Date(start);
@@ -75,6 +87,8 @@ export const getAvailableRooms = async (req: Request, res: Response) => {
 
     const available_rooms = all_rooms.filter(({ _id }: any) => !booked_rooms_ids.includes(_id));
 
+    if (!coordinates) return res.status(200).json(available_rooms);
 
-    return res.status(200).json(available_rooms);
+    const sorted_rooms = await sortRoomsByDistance(available_rooms, coordinates);
+    return res.status(200).json(sorted_rooms);
 }
