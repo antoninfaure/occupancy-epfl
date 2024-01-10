@@ -33,8 +33,18 @@ if (process.env.NODE_ENV === 'production') {
             'https://lm.polysource.ch'
         ]
     }));
+    console.log('cors:')
+    console.log({
+        origin: [
+            'https://occupancy.flep.ch',
+            'https://antoninfaure.github.io',
+            'https://lm.polysource.ch'
+        ]
+    })
 } else {
     app.use(cors());
+    console.log('cors:')
+    console.log('*')
 }
 
 // ROUTES
