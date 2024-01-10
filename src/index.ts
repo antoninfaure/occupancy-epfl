@@ -25,27 +25,29 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const allowedOrigins = [
+    'https://occupancy.flep.ch',
+    'https://antoninfaure.github.io',
+    'https://lm.polysource.ch'
+];
+
+// Configure CORS middleware
+const corsOptions = {
+    origin: allowedOrigins,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    optionsSuccessStatus: 204
+};
+
+
 if (process.env.NODE_ENV === 'production') {
-    app.use(cors({
-        origin: [
-            'https://occupancy.flep.ch',
-            'https://antoninfaure.github.io',
-            'https://lm.polysource.ch'
-        ]
-    }));
-    console.log('cors:')
-    console.log({
-        origin: [
-            'https://occupancy.flep.ch',
-            'https://antoninfaure.github.io',
-            'https://lm.polysource.ch'
-        ]
-    })
+    app.use(cors(corsOptions));
 } else {
     app.use(cors());
     console.log('cors:')
     console.log('*')
 }
+
 
 // ROUTES
 app.use('/api/rooms', routerRooms);
