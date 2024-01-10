@@ -21,7 +21,6 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // MIDDLEWARE
-
 const allowedOrigins = [
     'https://occupancy.flep.ch',
     'https://antoninfaure.github.io',
@@ -30,14 +29,12 @@ const allowedOrigins = [
 
 var corsOptions = {
     origin: function (origin: string, callback: Function) {
-        console.log('Origin:', origin)
         if (allowedOrigins.indexOf(origin) !== -1) {
             // Allow requests with a valid origin
             return callback(null, true);
         } else {
             // Reject requests from unapproved origins
-            return callback(null, false)
-            //return callback(new Error('Origin not allowed'), false);
+            return callback(new Error('Origin not allowed'), false);
         }
     },
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
@@ -46,7 +43,11 @@ var corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept']
 };
 
-app.use(cors(corsOptions));
+if (process.env.NODE_ENV === 'production') {
+    app.use(cors(corsOptions));
+} else {
+    app.use(cors());
+}
 
 // Middleware to handle errors from CORS
 app.use((err: any, req: any, res: any, next: any) => {
