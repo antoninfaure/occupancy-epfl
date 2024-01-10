@@ -22,31 +22,42 @@ const port = process.env.PORT || 5000;
 
 // MIDDLEWARE
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
 const allowedOrigins = [
     'https://occupancy.flep.ch',
     'https://antoninfaure.github.io',
     'https://lm.polysource.ch'
 ];
 
-// Configure CORS middleware
-const corsOptions = {
-    origin: allowedOrigins,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-    optionsSuccessStatus: 204
+var corsOptions = {
+    origin: function (origin: string, callback: Function) {
+        console.log('Origin:', origin)
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            // Allow requests with a valid origin
+            return callback(null, true);
+        } else {
+            // Reject requests from unapproved origins
+            return callback(null, false)
+            //return callback(new Error('Origin not allowed'), false);
+        }
+    },
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+    credentials: true, //Credentials are cookies, authorization headers or TLS client certificates.
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'device-remember-token', 'Access-Control-Allow-Origin', 'Origin', 'Accept']
 };
 
+app.use(cors(corsOptions));
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(cors(corsOptions));
-} else {
-    app.use(cors());
-    console.log('cors:')
-    console.log('*')
-}
+// Middleware to handle errors from CORS
+app.use((err: any, req: any, res: any, next: any) => {
+    if (err instanceof Error && err.message === 'Origin not allowed') {
+        return res.status(403).json({ message: 'Origin not allowed' });
+    }
+    next(err);
+});
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // ROUTES
@@ -59,6 +70,8 @@ app.use('/api/studyplans', routerStudyplans);
 app.use(function (_req: Request, res: Response) {
     res.status(404).send("Not found");
 });
+
+
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
