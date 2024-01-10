@@ -50,4 +50,5 @@ app.use(function (_req: Request, res: Response) {
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`)
 });
