@@ -1,4 +1,5 @@
 // services/rooms.ts
+import { ObjectId } from 'mongoose';
 import { CourseBookingModel, CourseScheduleModel, EventBookingModel, EventScheduleModel, RoomModel } from '../db/models';
 
 export const fetchRooms = async () => {
@@ -12,7 +13,7 @@ export const fetchRooms = async () => {
 
     const rooms = await RoomModel.find({
         available: true
-    }).select(['-_id', 'name', 'type', 'coordinates']).lean();
+    }).select(['name', 'type', 'coordinates']).lean();
     return rooms;
 }
 
@@ -32,9 +33,12 @@ export const fetchRoom = async (room_name: string) => {
 }
 
 export const fetchBookedRoomsIds = async (query_conditions: any) => {
+
     const constraining_course_schedules = await CourseScheduleModel.find({
-        $or: query_conditions
+        "$or": query_conditions,
+        available: true
     }).lean().exec();
+
     const course_booked_rooms = await CourseBookingModel.find({
         schedule_id: {
             $in: constraining_course_schedules.map(({ _id }: any) => _id)
@@ -43,7 +47,7 @@ export const fetchBookedRoomsIds = async (query_conditions: any) => {
     const course_booked_rooms_ids = course_booked_rooms.map(({ room_id }: any) => room_id);
 
     const constraining_event_schedules = await EventScheduleModel.find({
-        $or: query_conditions
+        "$or": query_conditions
     }).lean().exec();
     const event_booked_rooms = await EventBookingModel.find({
         schedule_id: {
@@ -57,7 +61,7 @@ export const fetchBookedRoomsIds = async (query_conditions: any) => {
     return booked_rooms_ids;
 }
 
-export const sortRoomsByDistance = async (rooms: any, coordinates: any, ascending=true) => {
+export const sortRoomsByDistance = async (rooms: any, coordinates: any, ascending = true) => {
     /*
         Sort rooms by distance
         - Inputs:
@@ -109,4 +113,51 @@ const computeDistance = async (coords_a: any, coords_b: any) => {
     const d = R * c; // in meters
 
     return d;
+}
+
+
+export const fetchSoonestBooking = async (after_date: Date, room_id: ObjectId) => {
+    const bookings = await CourseBookingModel.find({
+        available: true,
+        room_id
+    }).populate('schedule')
+        .sort({ 'schedule.end_datetime': 1 })
+        .lean();
+
+    const bookings_after_date = bookings.filter(({ schedule }: any) => {
+        return schedule.end_datetime > after_date;
+    });
+
+    const soonest_booking = bookings_after_date[0]
+
+    return soonest_booking;
+}
+
+export const fetchSoonestBookingsPerRoom = async (after_date: Date) => {
+    const bookings = await CourseBookingModel.find({
+        available: true,
+    }).populate('schedule')
+        .sort({ 'schedule.end_datetime': 1 })
+        .lean();
+
+    const bookings_after_date = bookings.filter(({ schedule }: any) => {
+        return schedule.end_datetime > after_date;
+    });
+
+    const soonest_booking_per_room = bookings_after_date.reduce((acc: any, booking: any) => {
+        const { room_id, schedule } = booking;
+        const { start_datetime, end_datetime } = schedule;
+
+        if (acc[room_id]) {
+            if (acc[room_id].end_datetime > end_datetime) {
+                acc[room_id] = { start_datetime, end_datetime };
+            }
+        } else {
+            acc[room_id] = { start_datetime, end_datetime };
+        }
+
+        return acc;
+    }, {});
+
+    return soonest_booking_per_room;
 }

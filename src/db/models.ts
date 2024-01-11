@@ -86,11 +86,11 @@ const CourseScheduleSchema = new Schema({
         ref: 'Course'
     },
     start_datetime: {
-        type: String,
+        type: Date,
         required: true
     },
     end_datetime: {
-        type: String,
+        type: Date,
         required: true
     },
     label: {
@@ -120,11 +120,11 @@ const EventScheduleSchema = new Schema({
         required: true
     },
     start_datetime: {
-        type: String,
+        type: Date,
         required: true
     },
     end_datetime: {
-        type: String,
+        type: Date,
         required: true
     },
     label: {
