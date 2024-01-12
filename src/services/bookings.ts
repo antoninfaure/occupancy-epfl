@@ -29,6 +29,10 @@ export const fetchRoomCourseSchedules = async (room_id: Types.ObjectId) => {
     return schedules.map(({ schedule } : any) => {
         const { course, start_datetime, end_datetime, label } = schedule;
         const { code, name } = course;
+        const dayBefore = new Date(start_datetime);
+        dayBefore.setHours(dayBefore.getHours() - 1); // UTC+1
+        dayBefore.setDate(dayBefore.getDate() - 1); // day before
+        if (end_datetime < dayBefore) return null;
         return {
             course: {
                 code,
@@ -38,7 +42,7 @@ export const fetchRoomCourseSchedules = async (room_id: Types.ObjectId) => {
             end_datetime,
             label
         };
-    })
+    }).filter((schedule: any) => schedule !== null);
 }
 
 export const fetchRoomEventSchedules = async (room_id: Types.ObjectId) => {
