@@ -71,6 +71,14 @@ Returns a list of available rooms based on the specified date and time ranges.
     - ```end```: The end datetime of the time slot (e.g., ```2021-10-01T10:00```)
 - **Returns**: A list of available rooms based on the specified date and time ranges.
 
+**POST** ```/api/rooms/find_soonest_bookings```
+
+Return a list of rooms with the soonest (or current) booking for each room, after the specified datetime.
+
+- **Parameters**: 
+  - ```after_date```: The datetime after which the bookings should be returned (e.g., ```2021-10-01T08:00```)
+- **Returns**: A list of rooms with the soonest booking for each room, after the specified datetime.
+
 ## Error Handling
 
 The API returns the following error codes:

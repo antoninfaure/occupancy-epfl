@@ -13,7 +13,7 @@ export const fetchRooms = async () => {
 
     const rooms = await RoomModel.find({
         available: true
-    }).select(['name', 'type', 'coordinates']).lean();
+    }).select(['name', 'type', 'coordinates', 'building']).lean();
     return rooms;
 }
 
@@ -23,7 +23,7 @@ export const fetchRoom = async (room_name: string) => {
         - Inputs:
             - room_name: string
         - Outputs:
-            - Room (name, type)
+            - Room (_id, name, type, coordinates, building)
     */
 
     const room = await RoomModel.findOne({
