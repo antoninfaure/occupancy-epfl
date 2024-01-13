@@ -19,7 +19,9 @@ const RoomSchema = new Schema({
         latitude: Number,
         longitude: Number
     },
-    capacity: Number
+    capacity: Number,
+    level: Number,
+    building: String
 }, { collection: 'rooms' });
 
 /// TEACHER
