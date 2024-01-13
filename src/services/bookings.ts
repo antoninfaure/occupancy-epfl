@@ -57,15 +57,16 @@ export const fetchRoomEventSchedules = async (room_id: Types.ObjectId) => {
     const bookings = await EventBookingModel.find({
         room_id: room_id,
         available: true
-    }).populate({
-        path: 'schedule_id'
     }).lean().exec();
 
-    return bookings.map(({ schedule_id } : any) => {
+    return bookings.map(({ name, start_datetime, end_datetime, label }: any) => {
         return {
-            ...schedule_id
+            name,
+            start_datetime,
+            end_datetime,
+            label
         };
-    });
+    })
 }
 
 export const fetchCourseSchedules = async (course_id: Types.ObjectId) => {

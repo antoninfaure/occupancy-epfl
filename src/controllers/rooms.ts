@@ -24,7 +24,7 @@ export const getRoom = async (req: Request, res: Response) => {
 
     // Get the room's schedules
     const course_schedules = await fetchRoomCourseSchedules(room_id);
-    const event_schedules = await fetchRoomEventSchedules(room_id);
+    const event_schedules = await fetchRoomEventSchedules(room_id) as any[];
 
     // Add the bookings to the room object
     const { name, type, link, coordinates, building, capacity, level } = room

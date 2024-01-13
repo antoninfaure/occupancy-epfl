@@ -115,32 +115,6 @@ CourseScheduleSchema.virtual('bookings', {
 });
 
 
-/// EVENT SCHEDULE
-const EventScheduleSchema = new Schema({
-    available: {
-        type: Boolean,
-        required: true
-    },
-    start_datetime: {
-        type: Date,
-        required: true
-    },
-    end_datetime: {
-        type: Date,
-        required: true
-    },
-    label: {
-        type: String,
-        required: true
-    },
-    name: {
-        type: String,
-        required: true
-    },
-    description: String
-}, { collection: 'event_schedules' });
-
-
 /// COURSE BOOKING
 const CourseBookingSchema = new Schema({
     available: {
@@ -186,11 +160,23 @@ const EventBookingSchema = new Schema({
         required: true,
         ref: 'Room'
     },
-    schedule_id: {
-        type: Types.ObjectId,
-        required: true,
-        ref: 'EventSchedule'
-    }
+    start_datetime: {
+        type: Date,
+        required: true
+    },
+    end_datetime: {
+        type: Date,
+        required: true
+    },
+    label: {
+        type: String,
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    description: String
 }, { collection: 'event_bookings' });
 
 EventBookingSchema.virtual('room', {
@@ -198,15 +184,7 @@ EventBookingSchema.virtual('room', {
     localField: 'room_id', 
     foreignField: '_id',
     justOne: true 
-});
-
-EventBookingSchema.virtual('schedule', {
-    ref: 'EventSchedule',
-    localField: 'schedule_id', 
-    foreignField: '_id',
-    justOne: true
-});
-
+})
 
 /// STUDYPLAN
 const StudyplanSchema = new Schema({
@@ -324,7 +302,6 @@ export const RoomModel = model('Room', RoomSchema);
 export const TeacherModel = model('Teacher', TeacherSchema);
 export const CourseModel = model('Course', CourseSchema);
 export const CourseScheduleModel = model('CourseSchedule', CourseScheduleSchema);
-export const EventScheduleModel = model('EventSchedule', EventScheduleSchema);
 export const CourseBookingModel = model('CourseBooking', CourseBookingSchema);
 export const EventBookingModel = model('EventBooking', EventBookingSchema);
 export const StudyplanModel = model('Studyplan', StudyplanSchema);
