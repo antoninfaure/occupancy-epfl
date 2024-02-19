@@ -123,8 +123,14 @@ export const fetchStudyplanCourses = async (studyplan_id: Types.ObjectId) => {
     })
     .lean().exec();
 
+    if (!courses || courses.length === 0) return [];
+
     return courses.map(({ course }: any) => {
         const { teachers, ...courseProps } = course;
+        if (!teachers || teachers.length === 0) return {
+            ...courseProps,
+            teachers: []
+        };
         return {
             ...courseProps,
             teachers: teachers.map(({ name, people_url }: any) => { return { name, people_url } })
