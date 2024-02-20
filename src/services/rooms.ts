@@ -166,14 +166,15 @@ export const fetchSoonestBookingsPerRoom = async (after_date: Date) => {
     const soonest_booking_per_room = [...course_bookings, ...event_bookings].reduce((acc: any, booking: any) => {
         const { room_id, start_datetime, end_datetime  } = booking;
         if (end_datetime < after_date) return acc;
-        if (acc[room_id]) {
-            if (acc[room_id].end_datetime > end_datetime) {
-                acc[room_id] = { start_datetime, end_datetime };
-            }
-        } else {
-            acc[room_id] = { start_datetime, end_datetime };
-        }
+        if (!acc[room_id]) acc[room_id] = { start_datetime, end_datetime };
 
+        if (new Date(acc[room_id].end_datetime).getTime() === new Date(start_datetime).getTime()) {
+            acc[room_id] = {
+                start_datetime: acc[room_id].start_datetime,
+                end_datetime
+            };
+        }
+       
         return acc;
     }, {});
 
