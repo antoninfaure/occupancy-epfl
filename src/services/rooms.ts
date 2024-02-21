@@ -42,12 +42,14 @@ export const fetchBookedRoomsIds = async (query_conditions: any) => {
     const course_booked_rooms = await CourseBookingModel.find({
         schedule_id: {
             $in: constraining_course_schedules.map(({ _id }: any) => _id)
-        }
+        },
+        available: true
     }).lean().exec();
     const course_booked_rooms_ids = course_booked_rooms.map(({ room_id }: any) => room_id);
 
     const event_booked_rooms = await EventBookingModel.find({
-        "$or": query_conditions
+        "$or": query_conditions,
+        available: true
     }).lean().exec();
 
     const event_booked_rooms_ids = event_booked_rooms.map(({ room_id }: any) => room_id);

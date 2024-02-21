@@ -78,7 +78,6 @@ export const fetchCourseSchedules = async (course_id: Types.ObjectId) => {
             - Array of schedules (start_datetime, end_datetime, label, rooms)
     */
 
-
     const schedules = await CourseScheduleModel.find({
         course_id: course_id,
         available: true
@@ -90,12 +89,14 @@ export const fetchCourseSchedules = async (course_id: Types.ObjectId) => {
             path: 'room',
             select: "code name -_id"
         },
-        select: 'room room_id -_id -schedule_id'
+        select: 'room available room_id -_id -schedule_id'
     })
     .lean().exec();
 
+
     const results = schedules.map(({ bookings, start_datetime, end_datetime, label }: any) => {
-        const rooms = bookings.map((booking: any) => booking.room)
+        const availableBookings = bookings.filter((booking: any) => booking.available)
+        const rooms = availableBookings.map((booking: any) => booking.room)
         
         return {
             start_datetime,
@@ -128,13 +129,14 @@ export const fetchCoursesSchedules = async (courses_ids: Types.ObjectId[]) => {
             path: 'room',
             select: "code name -_id"
         },
-        select: 'room room_id -_id -schedule_id'
+        select: 'room available room_id -_id -schedule_id'
     })
     .populate('course')
     .lean().exec();
 
     const results = schedules.map(({ bookings, start_datetime, end_datetime, label, course }: any) => {
-        const rooms = bookings.map((booking: any) => booking.room)
+        const availableBookings = bookings.filter((booking: any) => booking.available)
+        const rooms = availableBookings.map((booking: any) => booking.room)
         if (course) course = {
             code: course.code,
             name: course.name
