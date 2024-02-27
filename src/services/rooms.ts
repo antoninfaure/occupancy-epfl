@@ -165,20 +165,59 @@ export const fetchSoonestBookingsPerRoom = async (after_date: Date) => {
     }).sort({ 'end_datetime': 1 })
         .lean();
 
-    const soonest_booking_per_room = [...course_bookings, ...event_bookings].reduce((acc: any, booking: any) => {
-        const { room_id, start_datetime, end_datetime  } = booking;
-        if (end_datetime < after_date) return acc;
-        if (!acc[room_id]) acc[room_id] = { start_datetime, end_datetime };
 
-        if (new Date(acc[room_id].end_datetime).getTime() === new Date(start_datetime).getTime()) {
-            acc[room_id] = {
-                start_datetime: acc[room_id].start_datetime,
-                end_datetime
-            };
+    // sort bookings by room
+    const sorted_bookings = [...course_bookings, ...event_bookings].reduce((acc: any, booking: any) => {
+        const { room_id, start_datetime, end_datetime } = booking;
+
+        if (end_datetime < after_date) return acc;
+
+        if (!acc[room_id]) {
+            acc[room_id] = [];
         }
-       
+
+        acc[room_id].push({ start_datetime, end_datetime });
+
         return acc;
     }, {});
+
+    let soonest_booking_per_room = {} as any;
+    for (const room_id in sorted_bookings) {
+        let room_sorted_bookings = sorted_bookings[room_id].sort((a: any, b: any) => {
+            return a.start_datetime - b.start_datetime;
+        });
+        
+        let soonest_booking = room_sorted_bookings.reduce((acc: any, booking: any) => {
+            let soonestSchedule = null;
+            for (let i = 0; i < room_sorted_bookings.length; i++) {
+                let current = room_sorted_bookings[i];
+
+                if (new Date(current.end_datetime) < new Date()) continue;
+
+                // if no soonestSchedule, set the current schedule as current
+                if (!soonestSchedule) {
+                    soonestSchedule = current;
+                    continue;
+                }
+
+                // Check if the current schedule ends when the next one starts
+                if (soonestSchedule && new Date(soonestSchedule.end_datetime).getTime() === new Date(current.start_datetime).getTime()) {
+                    soonestSchedule = {
+                        start_datetime: soonestSchedule.start_datetime,
+                        end_datetime: current.end_datetime
+                    };
+                    continue;
+                }
+
+                return soonestSchedule;
+
+            }
+            return soonestSchedule;
+        }, room_sorted_bookings[0]);
+
+        soonest_booking_per_room[room_id] = soonest_booking;
+            
+    }
 
     return soonest_booking_per_room;
 }
