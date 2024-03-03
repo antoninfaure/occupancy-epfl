@@ -150,3 +150,5 @@ erDiagram
 ## Contributing
 
 Pull requests are welcome :smile:
+- [Androz2091](https://github.com/Androz2091) for the geolocalisation feature
+- [buercher](https://github.com/buercher) for creating a [Telegram Bot](https://github.com/buercher/NotEnoughRoomBot)
