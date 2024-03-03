@@ -84,14 +84,6 @@ erDiagram
         int status
     }
 
-   
-
-    USER {
-        int sciper
-        string name
-        string firstname
-        bool available
-    }
 
     ROOM {
         string name
