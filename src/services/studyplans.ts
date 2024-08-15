@@ -1,10 +1,11 @@
 // services/studyplans.ts
+import { match } from 'assert';
 import { PlannedInModel, StudyplanModel } from '../db/models';
 import { Types } from 'mongoose';
 
 export const fetchStudyplans = async () => {
     /*
-        Fetch all studyplans
+        Fetch all studyplans with semester with end_date > now
         - Inputs:
             - None
         - Outputs:
@@ -21,12 +22,13 @@ export const fetchStudyplans = async () => {
         })
         .populate({
             path: 'semester',
+            match: { end_date: { $gt: new Date() } },
             select: '-_id name type'
         })
         .lean().exec();
+        
 
     // Remove unit_id and semester_id
-
     return studyplans.map(({ unit, semester, _id}: any) => {
         return {
             _id,
@@ -54,7 +56,8 @@ export const fetchCourseStudyplans = async (course_id: Types.ObjectId) => {
     .populate({
         path: 'studyplan',
         populate: {
-            path: 'unit semester'
+            path: 'unit semester',
+            match: {'semester.end_date': { $gt: new Date() }},
         },
     })
     .lean().exec();
