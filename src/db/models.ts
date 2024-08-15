@@ -264,18 +264,18 @@ const SemesterSchema = new Schema({
         required: true
     },
     start_date: {
-        type: String,
+        type: Date,
         required: true
     },
     end_date: {
-        type: String,
+        type: Date,
         required: true
     },
     type: {
         type: String,
         required: true
     },
-    skip_dates: [String]
+    skip_dates: [Date]
 }, { collection: 'semesters' });
 
 

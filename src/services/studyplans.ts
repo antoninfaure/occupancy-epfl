@@ -27,9 +27,11 @@ export const fetchStudyplans = async () => {
         })
         .lean().exec();
         
+    // Remove null semesters
+    const filteredStudyplans = studyplans.filter(({ semester }: any) => semester);
 
     // Remove unit_id and semester_id
-    return studyplans.map(({ unit, semester, _id}: any) => {
+    return filteredStudyplans.map(({ unit, semester, _id}: any) => {
         return {
             _id,
             unit,
@@ -55,14 +57,21 @@ export const fetchCourseStudyplans = async (course_id: Types.ObjectId) => {
     .select(["-available"])
     .populate({
         path: 'studyplan',
-        populate: {
-            path: 'unit semester',
-            match: {'semester.end_date': { $gt: new Date() }},
-        },
+        populate: [{
+            path: 'unit'
+        }, {
+            path: 'semester',
+            match: { 
+                'end_date': { $gt: new Date() }
+            }
+        }]
     })
     .lean().exec();
 
-    return studyplans.map(({ studyplan }: any) => {
+    // Filter out any study plans where the semester didn't match (end_date < now)
+    const filteredStudyplans = studyplans.filter(({ studyplan }: any) => studyplan.semester);
+
+    return filteredStudyplans.map(({ studyplan }: any) => {
         const { unit, semester, _id } = studyplan;
         const { name: unit_name, section, code, promo } = unit;
         const { name: semester_name, type: semester_type } = semester;
