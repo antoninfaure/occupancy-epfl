@@ -27,7 +27,8 @@ export const fetchRoom = async (room_name: string) => {
     */
 
     const room = await RoomModel.findOne({
-        name: room_name
+        name: room_name,
+        available: true
     }).lean();
     return room;
 }
